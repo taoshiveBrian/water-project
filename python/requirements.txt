@@ -1,0 +1,7 @@
+# Python dependencies for scripts run from Laravel via the Process facade.
+# Install: python/venv/bin/pip install -r python/requirements.txt
+matplotlib==3.10.*
+
+# Uncomment when needed. CPU-only build keeps the install small (~200 MB vs several GB):
+#   python/venv/bin/pip install torch --index-url https://download.pytorch.org/whl/cpu
+# torch
