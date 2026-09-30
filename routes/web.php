@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\ArticleController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DatasetController;
 use App\Http\Controllers\Media\MediaController;
 use App\Http\Controllers\Media\MediaPickerController;
@@ -10,7 +11,7 @@ use Illuminate\Support\Facades\Route;
 Route::inertia('/', 'welcome')->name('home');
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::inertia('dashboard', 'dashboard')->name('dashboard');
+    Route::get('dashboard', DashboardController::class)->name('dashboard');
     Route::inertia('dashboard/map', 'dashboard/map')->name('dashboard.map');
     Route::inertia('dashboard/extra-info', 'dashboard/extra-info')->name('dashboard.extra-info');
     Route::get('dashboard/notes', [ArticleController::class, 'notes'])->name('dashboard.notes')->can('view-notes');

@@ -8,6 +8,7 @@ use App\Http\Requests\PublishArticleRequest;
 use App\Http\Requests\StoreArticleRequest;
 use App\Http\Requests\UpdateArticleRequest;
 use App\Http\Resources\ArticleResource;
+use App\Http\Resources\ArticleSummaryResource;
 use App\Models\Article;
 use App\Models\Category;
 use Illuminate\Database\Eloquent\Collection;
@@ -37,16 +38,7 @@ class ArticleController extends Controller
             ->latest()
             ->paginate(12)
             ->withQueryString()
-            ->through(fn (Article $article): array => [
-                'id' => $article->id,
-                'category' => $article->category?->only(['id', 'name', 'slug']),
-                'template' => $article->template,
-                'title' => $article->title,
-                'is_public' => $article->is_public,
-                'author' => $article->user->name,
-                'cover_image_url' => $article->coverImage ? ($article->coverImage->sizeUrls()['medium'] ?? $article->coverImage->url) : null,
-                'created_at' => $article->created_at,
-            ]);
+            ->through(fn (Article $article): array => ArticleSummaryResource::make($article)->resolve($request));
 
         return Inertia::render('articles/index', [
             'articles' => $articles,
