@@ -13,7 +13,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::inertia('dashboard', 'dashboard')->name('dashboard');
     Route::inertia('dashboard/map', 'dashboard/map')->name('dashboard.map');
     Route::inertia('dashboard/extra-info', 'dashboard/extra-info')->name('dashboard.extra-info');
-    Route::get('dashboard/notes', [ArticleController::class, 'notes'])->name('dashboard.notes');
+    Route::get('dashboard/notes', [ArticleController::class, 'notes'])->name('dashboard.notes')->can('view-notes');
 
     Route::get('dashboard/media', [MediaController::class, 'index'])->name('dashboard.media');
     Route::prefix('dashboard/media')->name('media.')->group(function () {

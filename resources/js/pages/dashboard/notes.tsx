@@ -1,6 +1,11 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { Pencil, Send, Trash2 } from 'lucide-react';
 import { useState } from 'react';
+import {
+    CategoryField,
+    categoryFormData,
+    useCategoryChoice,
+} from '@/components/articles/category-field';
 import { getTemplateConfig } from '@/components/articles/templates';
 import Heading from '@/components/heading';
 import { Button } from '@/components/ui/button';
@@ -13,31 +18,25 @@ import {
     DialogTitle,
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { dashboard } from '@/routes';
 import { create, destroy, edit, publish } from '@/routes/articles';
 import { notes as notesRoute } from '@/routes/dashboard';
-import type { ArticleType, ArticleTypeOption, NoteSummary } from '@/types';
+import type { Category, NoteSummary } from '@/types';
 
 function PublishDialog({
     note,
-    types,
+    categories,
     onClose,
 }: {
     note: NoteSummary | null;
-    types: ArticleTypeOption[];
+    categories: Category[];
     onClose: () => void;
 }) {
-    const [type, setType] = useState<ArticleType>('post');
+    const category = useCategoryChoice(note?.category ?? null);
     const [isPublic, setIsPublic] = useState(true);
     const [processing, setProcessing] = useState(false);
+    const [errors, setErrors] = useState<Record<string, string>>({});
 
     const submit = () => {
         if (!note) {
@@ -46,9 +45,11 @@ function PublishDialog({
 
         router.post(
             publish.url(note.id),
-            { type, is_public: isPublic },
+            { ...categoryFormData(category), is_public: isPublic },
             {
                 onStart: () => setProcessing(true),
+                onError: (validationErrors) =>
+                    setErrors(validationErrors as Record<string, string>),
                 onFinish: () => setProcessing(false),
             },
         );
@@ -67,29 +68,11 @@ function PublishDialog({
                     </DialogDescription>
                 </DialogHeader>
                 <div className="grid gap-4">
-                    <div className="grid gap-2">
-                        <Label>Type</Label>
-                        <Select
-                            value={type}
-                            onValueChange={(value) =>
-                                setType(value as ArticleType)
-                            }
-                        >
-                            <SelectTrigger className="w-40">
-                                <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {types.map((option) => (
-                                    <SelectItem
-                                        key={option.value}
-                                        value={option.value}
-                                    >
-                                        {option.label}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    </div>
+                    <CategoryField
+                        choice={category}
+                        categories={categories}
+                        errors={errors}
+                    />
                     <div className="grid gap-2">
                         <Label>Visibility</Label>
                         <ToggleGroup
@@ -125,10 +108,10 @@ function PublishDialog({
 
 export default function Notes({
     notes,
-    types,
+    categories,
 }: {
     notes: NoteSummary[];
-    types: ArticleTypeOption[];
+    categories: Category[];
 }) {
     const [publishing, setPublishing] = useState<NoteSummary | null>(null);
 
@@ -164,6 +147,8 @@ export default function Notes({
                                     </span>
                                     <span className="text-xs text-muted-foreground">
                                         {getTemplateConfig(note.template)?.name}{' '}
+                                        {note.category &&
+                                            `· ${note.category.name} `}
                                         · edited{' '}
                                         {new Date(
                                             note.updated_at,
@@ -207,7 +192,7 @@ export default function Notes({
             <PublishDialog
                 key={publishing?.id ?? 'closed'}
                 note={publishing}
-                types={types}
+                categories={categories}
                 onClose={() => setPublishing(null)}
             />
         </>

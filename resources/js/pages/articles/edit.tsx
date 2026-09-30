@@ -16,14 +16,14 @@ import type { ScopedPoolImage } from '@/components/articles/builder/sections-sco
 import { SimplePostForm } from '@/components/articles/builder/simple-post-form';
 import type { ArticleFormData } from '@/components/articles/builder/use-article-submit';
 import { index, update } from '@/routes/articles';
-import type { Article, ArticleTypeOption } from '@/types';
+import type { Article, Category } from '@/types';
 
 export default function EditArticle({
     article,
-    types,
+    categories,
 }: {
     article: Article;
-    types: ArticleTypeOption[];
+    categories: Category[];
 }) {
     const mode: EditorMode = {
         kind: 'edit',
@@ -73,7 +73,7 @@ export default function EditArticle({
                     article.body.builder === 'simple' && (
                         <SimplePostForm
                             mode={mode}
-                            types={types}
+                            categories={categories}
                             initial={{
                                 header: postHeaderFromArticle(article),
                                 subtitle: article.subtitle ?? '',
@@ -89,7 +89,7 @@ export default function EditArticle({
                     >
                         <ArticleEditor
                             mode={mode}
-                            types={types}
+                            categories={categories}
                             onBeforeSubmit={clearArticleImages}
                         />
                     </ArticleBuilderProvider>
@@ -98,7 +98,7 @@ export default function EditArticle({
                     <GuideBuilderProvider initial={parseGuideForEdit(article)}>
                         <GuideEditor
                             mode={mode}
-                            types={types}
+                            categories={categories}
                             onBeforeSubmit={clearCover}
                         />
                     </GuideBuilderProvider>

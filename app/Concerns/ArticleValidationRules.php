@@ -3,7 +3,6 @@
 namespace App\Concerns;
 
 use App\Enums\ArticleTemplate;
-use App\Enums\ArticleType;
 use App\Models\Article;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Validation\Rule;
@@ -22,7 +21,7 @@ trait ArticleValidationRules
     public const int MAX_CHAPTERS = 50;
 
     /**
-     * Fields every template has. Drafts don't need a type or visibility yet.
+     * Fields every template has. Drafts don't need a visibility yet.
      *
      * @return array<string, ValidationRule|array<mixed>|string>
      */
@@ -30,11 +29,24 @@ trait ArticleValidationRules
     {
         return [
             'title' => ['required', 'string', 'max:255'],
-            'type' => [$isNote ? 'nullable' : 'required', Rule::enum(ArticleType::class)],
+            ...$this->categoryRules(),
             'is_public' => [$isNote ? 'nullable' : 'required', 'boolean'],
             'cover_image' => $this->imageRules(),
             'cover_image_asset_id' => $this->libraryImageRules(),
             'body' => ['required', 'array'],
+        ];
+    }
+
+    /**
+     * An optional existing category, or the name of a new one to create.
+     *
+     * @return array<string, ValidationRule|array<mixed>|string>
+     */
+    protected function categoryRules(): array
+    {
+        return [
+            'category_id' => ['nullable', 'integer', Rule::exists('categories', 'id'), 'prohibits:new_category'],
+            'new_category' => ['nullable', 'string', 'max:50', 'regex:/[\pL\pN]/u'],
         ];
     }
 
@@ -164,6 +176,8 @@ trait ArticleValidationRules
             'chapter_images.*' => 'chapter image',
             'source_label' => 'source name',
             'source_url' => 'source URL',
+            'category_id' => 'category',
+            'new_category' => 'new category',
         ];
     }
 

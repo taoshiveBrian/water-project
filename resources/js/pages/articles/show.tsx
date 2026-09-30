@@ -57,12 +57,20 @@ export default function ShowArticle({
                                     Draft note
                                 </Badge>
                             ) : (
-                                <Badge
-                                    variant="secondary"
-                                    className="capitalize"
-                                >
-                                    {article.type}
-                                </Badge>
+                                article.category && (
+                                    <Badge variant="secondary" asChild>
+                                        <Link
+                                            href={index({
+                                                query: {
+                                                    category:
+                                                        article.category.slug,
+                                                },
+                                            })}
+                                        >
+                                            {article.category.name}
+                                        </Link>
+                                    </Badge>
+                                )
                             )}
                             {!article.is_public && !article.is_note && (
                                 <Badge variant="outline">
@@ -111,7 +119,7 @@ export default function ShowArticle({
                         <img
                             src={coverUrl}
                             alt=""
-                            className="aspect-video w-full rounded-xl object-cover"
+                            className="mx-auto h-auto max-h-[70vh] w-auto max-w-full rounded-xl"
                         />
                     )}
 

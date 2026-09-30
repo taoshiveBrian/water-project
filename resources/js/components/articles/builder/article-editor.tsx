@@ -11,7 +11,7 @@ import {
 import type { ArticleFormData } from '@/components/articles/builder/use-article-submit';
 import { useArticleSubmit } from '@/components/articles/builder/use-article-submit';
 import type { ScopedPoolImage } from '@/components/articles/builder/sections-scope';
-import type { ArticleLayoutBody, ArticleTypeOption, PoolField } from '@/types';
+import type { ArticleLayoutBody, Category, PoolField } from '@/types';
 
 export type EditorMode =
     | { kind: 'create'; submitUrl: string }
@@ -23,11 +23,11 @@ export type EditorMode =
  */
 export function ArticleEditor({
     mode,
-    types,
+    categories,
     onBeforeSubmit,
 }: {
     mode: EditorMode;
-    types: ArticleTypeOption[];
+    categories: Category[];
     onBeforeSubmit?: (
         data: ArticleFormData,
         state: { coverPreview: string | null; pool: ScopedPoolImage[] },
@@ -79,7 +79,7 @@ export function ArticleEditor({
         <div className="flex w-full max-w-4xl flex-col gap-6">
             <PostHeaderCard
                 header={header}
-                types={types}
+                categories={categories}
                 isNote={isNote}
                 errors={errors}
             />

@@ -4,6 +4,7 @@ import {
     displayModeClasses,
     INLINE_TAG_PATTERN,
 } from '@/components/articles/inline-images';
+import { linkify } from '@/components/articles/inline-links';
 import type { ArticleSection, DisplayMode } from '@/types';
 
 export type ResolvedImage = { url: string; displayMode: DisplayMode };
@@ -11,8 +12,8 @@ export type ResolvedImage = { url: string; displayMode: DisplayMode };
 export type TagImages = Map<string, ResolvedImage>;
 
 /**
- * Text with [tag] markers swapped for images. Built as React nodes, never as
- * HTML, so user text is always escaped.
+ * Text with [tag] markers swapped for images and links made clickable. Built as
+ * React nodes, never as HTML, so user text is always escaped.
  */
 export function InlineText({
     content,
@@ -28,7 +29,9 @@ export function InlineText({
         const tag = match[1];
         const image = images.get(tag);
 
-        nodes.push(content.slice(cursor, match.index));
+        nodes.push(
+            ...linkify(content.slice(cursor, match.index), `text-${cursor}`),
+        );
 
         if (image) {
             nodes.push(
@@ -44,7 +47,7 @@ export function InlineText({
         cursor = match.index + match[0].length;
     }
 
-    nodes.push(content.slice(cursor));
+    nodes.push(...linkify(content.slice(cursor), `text-${cursor}`));
 
     return <div className="flow-root whitespace-pre-line">{nodes}</div>;
 }
@@ -96,7 +99,7 @@ function renderSection(
                 <img
                     src={image.url}
                     alt=""
-                    className="w-full rounded-xl object-cover"
+                    className="mx-auto h-auto max-h-[70vh] w-auto max-w-full rounded-xl"
                 />
             ) : null;
         }

@@ -28,8 +28,8 @@
         "laravel/sail": "^1.53",
         "mockery/mockery": "^1.6",
         "nunomaduro/collision": "^8.9.3",
-        "pestphp/pest": "^5.2",
-        "pestphp/pest-plugin-laravel": "^5.0"
+        "pestphp/pest": "^4.7",
+        "pestphp/pest-plugin-laravel": "^4.0"
     },
     "autoload": {
         "psr-4": {
@@ -112,6 +112,9 @@
         "allow-plugins": {
             "pestphp/pest-plugin": true,
             "php-http/discovery": true
+        },
+        "platform": {
+            "php": "8.3.31"
         }
     },
     "minimum-stability": "stable",

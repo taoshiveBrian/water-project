@@ -2,39 +2,37 @@ import { X } from 'lucide-react';
 import { useState } from 'react';
 import { ImagePicker } from '@/components/articles/builder/image-picker';
 import type { Previews } from '@/components/articles/builder/sections-scope';
+import {
+    CategoryField,
+    categoryFormData,
+    useCategoryChoice,
+} from '@/components/articles/category-field';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
-import type { ArticleType, ArticleTypeOption, PickedImage } from '@/types';
+import type { Category, PickedImage } from '@/types';
 
 export type PostHeaderInitial = {
-    type: ArticleType;
+    category: Category | null;
     title: string;
     isPublic: boolean;
     coverPreview: string | null;
 };
 
 export const emptyPostHeader: PostHeaderInitial = {
-    type: 'post',
+    category: null,
     title: '',
     isPublic: true,
     coverPreview: null,
 };
 
 /**
- * Fields every template shares: type, title, visibility, and the cover image.
+ * Fields every template shares: category, title, visibility, and the cover image.
  */
 export function usePostHeader(initial: PostHeaderInitial, previews: Previews) {
-    const [type, setType] = useState(initial.type);
+    const category = useCategoryChoice(initial.category);
     const [title, setTitle] = useState(initial.title);
     const [isPublic, setIsPublic] = useState(initial.isPublic);
     const [cover, setCover] = useState<{
@@ -54,8 +52,7 @@ export function usePostHeader(initial: PostHeaderInitial, previews: Previews) {
     };
 
     return {
-        type,
-        setType,
+        category,
         title,
         setTitle,
         isPublic,
@@ -69,54 +66,37 @@ export function usePostHeader(initial: PostHeaderInitial, previews: Previews) {
 export type PostHeader = ReturnType<typeof usePostHeader>;
 
 /**
- * The header card at the top of every editor. Drafts hide type and visibility;
- * those are chosen when the draft is published from the Notes page.
+ * The header card at the top of every editor. Drafts hide visibility; it is
+ * chosen when the draft is published from the Notes page.
  */
 export function PostHeaderCard({
     header,
-    types,
+    categories,
     isNote,
     errors,
     subtitle,
 }: {
     header: PostHeader;
-    types: ArticleTypeOption[];
+    categories: Category[];
     isNote: boolean;
     errors: Record<string, string>;
     subtitle?: { value: string; onChange: (value: string) => void };
 }) {
     return (
         <section className="grid gap-5 rounded-xl border p-4 md:p-5">
-            {isNote ? (
+            {isNote && (
                 <p className="rounded-md bg-muted px-3 py-2 text-sm text-muted-foreground">
                     This is a draft note. Publish it from the Notes page to
-                    choose its type and visibility.
+                    choose its visibility.
                 </p>
-            ) : (
-                <div className="flex flex-wrap items-end gap-4">
-                    <div className="grid gap-2">
-                        <Label htmlFor="article-type">Type</Label>
-                        <Select
-                            value={header.type}
-                            onValueChange={(value) =>
-                                header.setType(value as ArticleType)
-                            }
-                        >
-                            <SelectTrigger id="article-type" className="w-40">
-                                <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {types.map((option) => (
-                                    <SelectItem
-                                        key={option.value}
-                                        value={option.value}
-                                    >
-                                        {option.label}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    </div>
+            )}
+            <div className="flex flex-wrap items-start gap-4">
+                <CategoryField
+                    choice={header.category}
+                    categories={categories}
+                    errors={errors}
+                />
+                {!isNote && (
                     <div className="grid gap-2">
                         <Label>Visibility</Label>
                         <ToggleGroup
@@ -135,8 +115,8 @@ export function PostHeaderCard({
                             </ToggleGroupItem>
                         </ToggleGroup>
                     </div>
-                </div>
-            )}
+                )}
+            </div>
 
             <div className="grid gap-2">
                 <Label htmlFor="article-title">Title</Label>
@@ -203,7 +183,7 @@ export function postHeaderFormData(
     header: PostHeader,
 ): Record<string, string | File> {
     const data: Record<string, string | File> = {
-        type: header.type,
+        ...categoryFormData(header.category),
         title: header.title,
         is_public: header.isPublic ? '1' : '0',
     };

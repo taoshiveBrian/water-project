@@ -5,24 +5,22 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { create, index, show } from '@/routes/articles';
-import type {
-    ArticleSummary,
-    ArticleType,
-    ArticleTypeOption,
-    Paginated,
-} from '@/types';
+import type { ArticleSummary, Category, Paginated } from '@/types';
 
 export default function ArticlesIndex({
     articles,
     filters,
-    types,
+    categories,
 }: {
     articles: Paginated<ArticleSummary>;
-    filters: { type: ArticleType | null };
-    types: ArticleTypeOption[];
+    filters: { category: string | null };
+    categories: Category[];
 }) {
     const { auth } = usePage().props;
-    const tabs = [{ value: null, label: 'All' }, ...types];
+    const tabs = [
+        { slug: null, name: 'All' },
+        ...categories.map(({ slug, name }) => ({ slug, name })),
+    ];
 
     return (
         <>
@@ -31,7 +29,7 @@ export default function ArticlesIndex({
                 <div className="flex flex-wrap items-start justify-between gap-4">
                     <Heading
                         title="Articles"
-                        description="Posts and tutorials."
+                        description="Posts and guides, by category."
                     />
                     {auth.user && (
                         <Button asChild>
@@ -43,21 +41,21 @@ export default function ArticlesIndex({
                     )}
                 </div>
 
-                <nav className="flex gap-1 border-b">
+                <nav className="flex gap-1 overflow-x-auto border-b">
                     {tabs.map((tab) => (
                         <Link
-                            key={tab.label}
+                            key={tab.slug ?? 'all'}
                             href={index({
-                                query: tab.value ? { type: tab.value } : {},
+                                query: tab.slug ? { category: tab.slug } : {},
                             })}
                             className={cn(
-                                '-mb-px border-b-2 px-3 py-2 text-sm',
-                                filters.type === tab.value
+                                '-mb-px shrink-0 border-b-2 px-3 py-2 text-sm whitespace-nowrap',
+                                filters.category === tab.slug
                                     ? 'border-foreground font-medium'
                                     : 'border-transparent text-muted-foreground hover:text-foreground',
                             )}
                         >
-                            {tab.label}
+                            {tab.name}
                         </Link>
                     ))}
                 </nav>
@@ -79,18 +77,17 @@ export default function ArticlesIndex({
                                         <img
                                             src={article.cover_image_url}
                                             alt=""
-                                            className="size-full object-cover"
+                                            className="size-full object-contain"
                                         />
                                     )}
                                 </div>
                                 <div className="grid gap-2 p-4">
                                     <div className="flex items-center gap-2">
-                                        <Badge
-                                            variant="secondary"
-                                            className="capitalize"
-                                        >
-                                            {article.type}
-                                        </Badge>
+                                        {article.category && (
+                                            <Badge variant="secondary">
+                                                {article.category.name}
+                                            </Badge>
+                                        )}
                                         {!article.is_public && (
                                             <Badge variant="outline">
                                                 <Lock />

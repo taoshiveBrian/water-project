@@ -22,7 +22,7 @@ class ArticleResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'type' => $this->type,
+            'category' => $this->category?->only(['id', 'name', 'slug']),
             'template' => $this->template,
             'title' => $this->title,
             'subtitle' => $this->subtitle,

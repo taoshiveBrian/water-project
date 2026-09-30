@@ -3,9 +3,9 @@
 namespace Database\Factories;
 
 use App\Enums\ArticleTemplate;
-use App\Enums\ArticleType;
 use App\Models\Article;
 use App\Models\Asset;
+use App\Models\Category;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -23,7 +23,6 @@ class ArticleFactory extends Factory
     {
         return [
             'user_id' => User::factory(),
-            'type' => ArticleType::Post,
             'template' => ArticleTemplate::Article,
             'title' => fake()->sentence(),
             'body' => [
@@ -77,10 +76,10 @@ class ArticleFactory extends Factory
         ]);
     }
 
-    public function tutorial(): static
+    public function categorized(): static
     {
         return $this->state(fn (array $attributes) => [
-            'type' => ArticleType::Tutorial,
+            'category_id' => Category::factory(),
         ]);
     }
 

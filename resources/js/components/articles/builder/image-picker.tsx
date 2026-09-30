@@ -40,7 +40,7 @@ export function ImagePicker({
                         <img
                             src={preview}
                             alt=""
-                            className="absolute inset-0 size-full object-cover"
+                            className="absolute inset-0 size-full object-contain"
                         />
                         <span className="relative rounded-md bg-background/85 px-2 py-1 text-xs font-medium text-foreground opacity-0 transition-opacity group-hover:opacity-100">
                             Replace image

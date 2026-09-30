@@ -38,3 +38,19 @@ test('authenticated users can visit the map page', function () {
     $response = $this->get(route('dashboard.map'));
     $response->assertInertia(fn ($page) => $page->component('dashboard/map'));
 });
+
+test('allowed users can visit the notes page and see its sidebar link', function () {
+    $this->actingAs(User::factory()->create(['email' => 'admin@example.com']));
+
+    $response = $this->get(route('dashboard.notes'));
+    $response->assertInertia(fn ($page) => $page
+        ->component('dashboard/notes')
+        ->where('auth.canViewNotes', true));
+});
+
+test('other users are forbidden from the notes page and do not see its sidebar link', function () {
+    $this->actingAs(User::factory()->create(['email' => 'someone@example.com']));
+
+    $this->get(route('dashboard.notes'))->assertForbidden();
+    $this->get(route('dashboard'))->assertInertia(fn ($page) => $page->where('auth.canViewNotes', false));
+});

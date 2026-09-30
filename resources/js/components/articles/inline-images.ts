@@ -12,7 +12,7 @@ export const COLUMN_BREAK = '[jump]';
  * lay out images the same way.
  */
 export const displayModeClasses: Record<DisplayMode, string> = {
-    block: 'my-4 block w-full rounded-lg',
+    block: 'mx-auto my-4 block h-auto max-h-[70vh] w-auto max-w-full rounded-lg',
     'float-left': 'float-left mr-4 mb-2 w-1/2 max-w-xs rounded-lg',
     'float-right': 'float-right mb-2 ml-4 w-1/2 max-w-xs rounded-lg',
 };

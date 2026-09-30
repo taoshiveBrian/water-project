@@ -4,11 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Actions\Articles\SaveArticle;
 use App\Enums\ArticleTemplate;
-use App\Enums\ArticleType;
+use App\Http\Requests\PublishArticleRequest;
 use App\Http\Requests\StoreArticleRequest;
 use App\Http\Requests\UpdateArticleRequest;
 use App\Http\Resources\ArticleResource;
 use App\Models\Article;
+use App\Models\Category;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -19,25 +21,25 @@ use Inertia\Response;
 class ArticleController extends Controller
 {
     /**
-     * List the published articles the viewer can see, optionally filtered by type.
+     * List the published articles the viewer can see, optionally filtered by category slug.
      */
     public function index(Request $request): Response
     {
         $filters = $request->validate([
-            'type' => ['nullable', Rule::enum(ArticleType::class)],
+            'category' => ['nullable', 'string', Rule::exists('categories', 'slug')],
         ]);
 
         $articles = Article::query()
             ->published()
             ->visibleTo($request->user())
-            ->when($filters['type'] ?? null, fn ($query, string $type) => $query->where('type', $type))
-            ->with(['user', 'coverImage'])
+            ->when($filters['category'] ?? null, fn ($query, string $slug) => $query->whereRelation('category', 'slug', $slug))
+            ->with(['user', 'category', 'coverImage'])
             ->latest()
             ->paginate(12)
             ->withQueryString()
             ->through(fn (Article $article): array => [
                 'id' => $article->id,
-                'type' => $article->type,
+                'category' => $article->category?->only(['id', 'name', 'slug']),
                 'template' => $article->template,
                 'title' => $article->title,
                 'is_public' => $article->is_public,
@@ -48,8 +50,8 @@ class ArticleController extends Controller
 
         return Inertia::render('articles/index', [
             'articles' => $articles,
-            'filters' => ['type' => $filters['type'] ?? null],
-            'types' => $this->typeOptions(),
+            'filters' => ['category' => $filters['category'] ?? null],
+            'categories' => $this->categoryOptions(),
         ]);
     }
 
@@ -61,18 +63,20 @@ class ArticleController extends Controller
         $notes = Article::query()
             ->whereBelongsTo($request->user())
             ->where('is_note', true)
+            ->with('category')
             ->latest('updated_at')
             ->get()
             ->map(fn (Article $article): array => [
                 'id' => $article->id,
                 'template' => $article->template,
                 'title' => $article->title,
+                'category' => $article->category?->only(['id', 'name', 'slug']),
                 'updated_at' => $article->updated_at,
             ]);
 
         return Inertia::render('dashboard/notes', [
             'notes' => $notes,
-            'types' => $this->typeOptions(),
+            'categories' => $this->categoryOptions(),
         ]);
     }
 
@@ -83,7 +87,7 @@ class ArticleController extends Controller
     {
         Gate::authorize('view', $article);
 
-        $article->load(['user', ...Article::imageRelations()]);
+        $article->load(['user', 'category', ...Article::imageRelations()]);
 
         return Inertia::render('articles/show', [
             'article' => ArticleResource::make($article)->resolve($request),
@@ -102,7 +106,7 @@ class ArticleController extends Controller
         Gate::authorize('create', Article::class);
 
         return Inertia::render('articles/create', [
-            'types' => $this->typeOptions(),
+            'categories' => $this->categoryOptions(),
         ]);
     }
 
@@ -129,11 +133,11 @@ class ArticleController extends Controller
     {
         Gate::authorize('update', $article);
 
-        $article->load(['user', ...Article::imageRelations()]);
+        $article->load(['user', 'category', ...Article::imageRelations()]);
 
         return Inertia::render('articles/edit', [
             'article' => ArticleResource::make($article)->resolve($request),
-            'types' => $this->typeOptions(),
+            'categories' => $this->categoryOptions(),
         ]);
     }
 
@@ -150,17 +154,16 @@ class ArticleController extends Controller
     /**
      * Turn a draft note into a real post.
      */
-    public function publish(Request $request, Article $article): RedirectResponse
+    public function publish(PublishArticleRequest $request, Article $article): RedirectResponse
     {
-        Gate::authorize('update', $article);
         abort_unless($article->is_note, 404);
 
-        $validated = $request->validate([
-            'type' => ['required', Rule::enum(ArticleType::class)],
-            'is_public' => ['required', 'boolean'],
-        ]);
+        $validated = $request->validated();
 
-        $article->update([...$validated, 'is_note' => false]);
+        $article->category_id = Category::idFromInput($validated);
+        $article->is_public = $validated['is_public'];
+        $article->is_note = false;
+        $article->save();
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Article published.')]);
 
@@ -189,13 +192,10 @@ class ArticleController extends Controller
     }
 
     /**
-     * @return list<array{value: string, label: string}>
+     * @return Collection<int, Category>
      */
-    private function typeOptions(): array
+    private function categoryOptions(): Collection
     {
-        return array_map(
-            fn (ArticleType $type): array => ['value' => $type->value, 'label' => $type->label()],
-            ArticleType::cases(),
-        );
+        return Category::query()->orderBy('name')->get(['id', 'name', 'slug']);
     }
 }

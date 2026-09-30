@@ -3,9 +3,9 @@
 namespace App\Actions\Articles;
 
 use App\Enums\ArticleTemplate;
-use App\Enums\ArticleType;
 use App\Models\Article;
 use App\Models\Asset;
+use App\Models\Category;
 use App\Services\AssetService;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\UploadedFile;
@@ -38,7 +38,7 @@ class SaveArticle
             'source_url' => $isArticleTemplate ? ($validated['source_url'] ?? null) : null,
         ]);
 
-        $article->type = $validated['type'] ?? $article->type ?? ArticleType::Post;
+        $article->category_id = Category::idFromInput($validated);
 
         $article->is_public = $article->is_note ? false : (bool) $validated['is_public'];
 

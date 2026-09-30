@@ -13,7 +13,7 @@ import type { ArticleFormData } from '@/components/articles/builder/use-article-
 import { useArticleSubmit } from '@/components/articles/builder/use-article-submit';
 import InputError from '@/components/input-error';
 import { Label } from '@/components/ui/label';
-import type { ArticleTypeOption } from '@/types';
+import type { Category } from '@/types';
 
 export type SimplePostInitial = {
     header: PostHeaderInitial;
@@ -27,12 +27,12 @@ const textareaClassName =
 
 export function SimplePostForm({
     mode,
-    types,
+    categories,
     initial = { header: emptyPostHeader, subtitle: '', text: '', text2: '' },
     onBeforeSubmit,
 }: {
     mode: EditorMode;
-    types: ArticleTypeOption[];
+    categories: Category[];
     initial?: SimplePostInitial;
     onBeforeSubmit?: (
         data: ArticleFormData,
@@ -65,7 +65,7 @@ export function SimplePostForm({
         <div className="flex w-full max-w-4xl flex-col gap-6">
             <PostHeaderCard
                 header={header}
-                types={types}
+                categories={categories}
                 isNote={isNote}
                 errors={errors}
                 subtitle={{ value: subtitle, onChange: setSubtitle }}

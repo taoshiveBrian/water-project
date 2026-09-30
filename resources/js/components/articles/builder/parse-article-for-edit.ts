@@ -13,7 +13,7 @@ const KNOWN_SECTION_TYPES = new Set(SECTIONS.map((section) => section.id));
 
 export function postHeaderFromArticle(article: Article): PostHeaderInitial {
     return {
-        type: article.type,
+        category: article.category,
         title: article.title,
         isPublic: article.is_public,
         coverPreview: article.images.cover_image?.url ?? null,

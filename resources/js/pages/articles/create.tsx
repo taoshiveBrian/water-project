@@ -11,7 +11,7 @@ import { getTemplateConfig, templates } from '@/components/articles/templates';
 import Heading from '@/components/heading';
 import { Button } from '@/components/ui/button';
 import { create, index, store } from '@/routes/articles';
-import type { ArticleTemplate, ArticleTypeOption } from '@/types';
+import type { ArticleTemplate, Category } from '@/types';
 
 function TemplatePicker({
     onPick,
@@ -45,9 +45,9 @@ function TemplatePicker({
 }
 
 export default function CreateArticle({
-    types,
+    categories,
 }: {
-    types: ArticleTypeOption[];
+    categories: Category[];
 }) {
     const [template, setTemplate] = useState<ArticleTemplate | null>(null);
     const mode: EditorMode = { kind: 'create', submitUrl: store.url() };
@@ -75,16 +75,25 @@ export default function CreateArticle({
                         </div>
 
                         {template === 'simple' && (
-                            <SimplePostForm mode={mode} types={types} />
+                            <SimplePostForm
+                                mode={mode}
+                                categories={categories}
+                            />
                         )}
                         {template === 'article' && (
                             <ArticleBuilderProvider>
-                                <ArticleEditor mode={mode} types={types} />
+                                <ArticleEditor
+                                    mode={mode}
+                                    categories={categories}
+                                />
                             </ArticleBuilderProvider>
                         )}
                         {template === 'sectioned' && (
                             <GuideBuilderProvider>
-                                <GuideEditor mode={mode} types={types} />
+                                <GuideEditor
+                                    mode={mode}
+                                    categories={categories}
+                                />
                             </GuideBuilderProvider>
                         )}
                     </>

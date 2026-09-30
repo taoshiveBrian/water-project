@@ -1,8 +1,7 @@
-export type ArticleType = 'post' | 'tutorial';
-
-export type ArticleTypeOption = {
-    value: ArticleType;
-    label: string;
+export type Category = {
+    id: number;
+    name: string;
+    slug: string;
 };
 
 export type ArticleTemplate = 'simple' | 'article' | 'sectioned';
@@ -89,7 +88,7 @@ export type ArticleImage = {
 
 export type Article = {
     id: number;
-    type: ArticleType;
+    category: Category | null;
     template: ArticleTemplate;
     title: string;
     subtitle: string | null;
@@ -106,7 +105,7 @@ export type Article = {
 
 export type ArticleSummary = {
     id: number;
-    type: ArticleType;
+    category: Category | null;
     template: ArticleTemplate;
     title: string;
     is_public: boolean;
@@ -119,5 +118,6 @@ export type NoteSummary = {
     id: number;
     template: ArticleTemplate;
     title: string;
+    category: Category | null;
     updated_at: string;
 };

@@ -19,7 +19,7 @@ import { useArticleSubmit } from '@/components/articles/builder/use-article-subm
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import type { ArticleTypeOption } from '@/types';
+import type { Category } from '@/types';
 
 /**
  * One chapter as sent to the server. A pool entry names its upload only when it
@@ -54,11 +54,11 @@ function chapterPayload(chapter: ChapterState) {
 
 export function GuideEditor({
     mode,
-    types,
+    categories,
     onBeforeSubmit,
 }: {
     mode: EditorMode;
-    types: ArticleTypeOption[];
+    categories: Category[];
     onBeforeSubmit?: (
         data: ArticleFormData,
         state: { coverPreview: string | null },
@@ -97,7 +97,7 @@ export function GuideEditor({
         <div className="flex w-full max-w-4xl flex-col gap-6">
             <PostHeaderCard
                 header={header}
-                types={types}
+                categories={categories}
                 isNote={isNote}
                 errors={errors}
             />

@@ -1,9 +1,9 @@
 <?php
 
 use App\Enums\ArticleTemplate;
-use App\Enums\ArticleType;
 use App\Models\Article;
 use App\Models\Asset;
+use App\Models\Category;
 use App\Models\User;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -22,7 +22,6 @@ beforeEach(function () {
 function articlePayload(array $pool = [], array $overrides = []): array
 {
     return [
-        'type' => 'tutorial',
         'template' => 'article',
         'title' => 'Reading a hydrograph',
         'is_public' => '1',
@@ -62,16 +61,26 @@ describe('index', function () {
         $response->assertInertia(fn (Assert $page) => $page->has('articles.data', 1));
     });
 
-    test('articles can be filtered by type', function () {
-        $tutorial = Article::factory()->tutorial()->create();
+    test('articles can be filtered by category, with every category offered as a tab', function () {
+        $categorized = Article::factory()->categorized()->create();
+        Article::factory()->categorized()->create();
         Article::factory()->create();
+        $slug = $categorized->category->slug;
 
-        $response = $this->get(route('articles.index', ['type' => 'tutorial']));
+        $response = $this->get(route('articles.index', ['category' => $slug]));
 
         $response->assertInertia(fn (Assert $page) => $page
+            ->has('categories', 2)
             ->has('articles.data', 1)
-            ->where('articles.data.0.id', $tutorial->id)
-            ->where('filters.type', 'tutorial'));
+            ->where('articles.data.0.id', $categorized->id)
+            ->where('articles.data.0.category.slug', $slug)
+            ->where('filters.category', $slug));
+    });
+
+    test('an unknown category filter is rejected', function () {
+        $response = $this->get(route('articles.index', ['category' => 'missing']));
+
+        $response->assertSessionHasErrors('category');
     });
 });
 
@@ -112,10 +121,12 @@ describe('create', function () {
         $response->assertRedirect(route('login'));
     });
 
-    test('authenticated users see the editor', function () {
+    test('authenticated users see the editor with the existing categories', function () {
+        Category::factory()->count(2)->create();
+
         $response = $this->actingAs(User::factory()->create())->get(route('articles.create'));
 
-        $response->assertInertia(fn (Assert $page) => $page->component('articles/create')->has('types', 2));
+        $response->assertInertia(fn (Assert $page) => $page->component('articles/create')->has('categories', 2));
     });
 });
 
@@ -135,7 +146,8 @@ describe('store', function () {
         $article = Article::sole();
         $response->assertRedirect(route('articles.show', $article));
         expect($article->user_id)->toBe($user->id);
-        expect($article->type)->toBe(ArticleType::Tutorial);
+        expect($article->type)->toBeNull();
+        expect($article->category_id)->toBeNull();
         expect($article->body['pool'][0]['field'])->toBe('image_2');
         expect($article->image_2_display)->toBe('float-left');
         expect($article->image_1_id)->toBeNull();
@@ -148,8 +160,51 @@ describe('store', function () {
     test('an empty payload is rejected', function () {
         $response = $this->actingAs(User::factory()->create())->post(route('articles.store'), []);
 
-        $response->assertSessionHasErrors(['template', 'type', 'title', 'is_public', 'body']);
+        $response->assertSessionHasErrors(['template', 'title', 'is_public', 'body']);
         expect(Article::count())->toBe(0);
+    });
+
+    test('an article can be given an existing category', function () {
+        $category = Category::factory()->create();
+
+        $this->actingAs(User::factory()->create())
+            ->post(route('articles.store'), articlePayload(overrides: ['category_id' => $category->id]));
+
+        expect(Article::sole()->category_id)->toBe($category->id);
+    });
+
+    test('a new category is created from its name, reusing one that differs only in case or spacing', function () {
+        $existing = Category::factory()->create(['name' => 'Water Quality']);
+        $user = User::factory()->create();
+
+        $this->actingAs($user)->post(route('articles.store'), articlePayload(overrides: ['new_category' => '  Stream   Flow ']));
+        $this->actingAs($user)->post(route('articles.store'), articlePayload(overrides: ['new_category' => 'water quality']));
+
+        [$first, $second] = Article::oldest('id')->get();
+        expect($first->category->name)->toBe('Stream Flow');
+        expect($first->category->slug)->toBe('stream-flow');
+        expect($second->category_id)->toBe($existing->id);
+        expect(Category::count())->toBe(2);
+    });
+
+    test('an existing and a new category cannot both be sent', function () {
+        $category = Category::factory()->create();
+
+        $response = $this->actingAs(User::factory()->create())->post(route('articles.store'), articlePayload(overrides: [
+            'category_id' => $category->id,
+            'new_category' => 'Other',
+        ]));
+
+        $response->assertSessionHasErrors('category_id');
+        expect(Article::count())->toBe(0);
+    });
+
+    test('a new category name needs a letter or number', function () {
+        $response = $this->actingAs(User::factory()->create())
+            ->post(route('articles.store'), articlePayload(overrides: ['new_category' => '!!!']));
+
+        $response->assertSessionHasErrors('new_category');
+        expect(Category::count())->toBe(0);
     });
 
     test('a body that is not the editor json is rejected', function () {
@@ -173,6 +228,15 @@ describe('store', function () {
 });
 
 describe('update', function () {
+    test('choosing no category removes it from the article', function () {
+        $article = Article::factory()->categorized()->create();
+
+        $this->actingAs($article->user)
+            ->put(route('articles.update', $article), articlePayload(overrides: ['category_id' => '']));
+
+        expect($article->fresh()->category_id)->toBeNull();
+    });
+
     test('other users cannot update an article', function () {
         $article = Article::factory()->create();
 
@@ -275,7 +339,6 @@ function guidePayload(array $chapters, array $overrides = []): array
 {
     return [
         'template' => 'sectioned',
-        'type' => 'tutorial',
         'title' => 'Calibrating a flow meter',
         'is_public' => '1',
         'body' => json_encode([
@@ -299,7 +362,6 @@ describe('simple template', function () {
 
         $this->actingAs($user)->post(route('articles.store'), [
             'template' => 'simple',
-            'type' => 'post',
             'title' => 'Hello',
             'subtitle' => 'A short one',
             'is_public' => '1',
@@ -315,7 +377,6 @@ describe('simple template', function () {
     test('text is required', function () {
         $response = $this->actingAs(User::factory()->create())->post(route('articles.store'), [
             'template' => 'simple',
-            'type' => 'post',
             'title' => 'Hello',
             'is_public' => '1',
             'body' => json_encode(['builder' => 'simple', 'text' => '']),
@@ -440,12 +501,11 @@ describe('guide template', function () {
 });
 
 describe('notes', function () {
-    test('saving as a note stores a private draft without a type or visibility', function () {
+    test('saving as a note stores a private draft without a visibility', function () {
         $user = User::factory()->create();
 
         $response = $this->actingAs($user)->post(route('articles.store'), articlePayload(overrides: [
             'is_note' => '1',
-            'type' => null,
             'is_public' => null,
         ]));
 
@@ -472,9 +532,10 @@ describe('notes', function () {
     });
 
     test('the notes page lists only the current user\'s drafts', function () {
-        $note = Article::factory()->note()->create();
+        $user = User::factory()->create(['email' => 'test@example.com']);
+        $note = Article::factory()->note()->for($user)->create();
         Article::factory()->note()->create();
-        Article::factory()->for($note->user)->create();
+        Article::factory()->for($user)->create();
 
         $response = $this->actingAs($note->user)->get(route('dashboard.notes'));
 
@@ -484,27 +545,39 @@ describe('notes', function () {
             ->where('notes.0.id', $note->id));
     });
 
-    test('publishing a note makes it a post with the chosen type and visibility', function () {
+    test('publishing a note makes it a post with the chosen category and visibility', function () {
         $note = Article::factory()->note()->create();
+        $category = Category::factory()->create();
 
         $response = $this->actingAs($note->user)->post(route('articles.publish', $note), [
-            'type' => 'tutorial',
+            'category_id' => $category->id,
             'is_public' => true,
         ]);
 
         $response->assertRedirect(route('articles.show', $note));
         $note->refresh();
         expect($note->is_note)->toBeFalse();
-        expect($note->type)->toBe(ArticleType::Tutorial);
+        expect($note->category_id)->toBe($category->id);
         expect($note->is_public)->toBeTrue();
     });
 
-    test('publishing requires a type', function () {
+    test('a note can be published into a new category', function () {
         $note = Article::factory()->note()->create();
 
-        $response = $this->actingAs($note->user)->post(route('articles.publish', $note), ['is_public' => true]);
+        $this->actingAs($note->user)->post(route('articles.publish', $note), [
+            'new_category' => 'Field Notes',
+            'is_public' => false,
+        ]);
 
-        $response->assertSessionHasErrors('type');
+        expect($note->fresh()->category->name)->toBe('Field Notes');
+    });
+
+    test('publishing requires a visibility', function () {
+        $note = Article::factory()->note()->create();
+
+        $response = $this->actingAs($note->user)->post(route('articles.publish', $note), []);
+
+        $response->assertSessionHasErrors('is_public');
         expect($note->fresh()->is_note)->toBeTrue();
     });
 
@@ -512,7 +585,7 @@ describe('notes', function () {
         $note = Article::factory()->note()->create();
 
         $response = $this->actingAs(User::factory()->create())
-            ->post(route('articles.publish', $note), ['type' => 'post', 'is_public' => true]);
+            ->post(route('articles.publish', $note), ['is_public' => true]);
 
         $response->assertForbidden();
         expect($note->fresh()->is_note)->toBeTrue();
