@@ -51,12 +51,11 @@ describe('index', function () {
             ->where('articles.data.0.id', $public->id));
     });
 
-    test('authors also see their own members-only articles', function () {
-        $author = User::factory()->create();
-        Article::factory()->membersOnly()->for($author)->create();
+    test('logged-in users also see members-only articles', function () {
         Article::factory()->membersOnly()->create();
+        Article::factory()->note()->create();
 
-        $response = $this->actingAs($author)->get(route('articles.index'));
+        $response = $this->actingAs(User::factory()->create())->get(route('articles.index'));
 
         $response->assertInertia(fn (Assert $page) => $page->has('articles.data', 1));
     });
@@ -97,12 +96,11 @@ describe('show', function () {
             ->where('can.update', false));
     });
 
-    test('members-only articles are hidden from other users as not found', function () {
+    test('members-only articles are visible to other logged-in users but not guests', function () {
         $article = Article::factory()->membersOnly()->create();
 
-        $response = $this->actingAs(User::factory()->create())->get(route('articles.show', $article));
-
-        $response->assertNotFound();
+        $this->get(route('articles.show', $article))->assertNotFound();
+        $this->actingAs(User::factory()->create())->get(route('articles.show', $article))->assertOk();
     });
 
     test('authors can view their members-only articles', function () {

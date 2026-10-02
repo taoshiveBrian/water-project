@@ -1,27 +1,12 @@
 import { Head, Link } from '@inertiajs/react';
 import { Lock, NotebookPen, Pencil, Trash2 } from 'lucide-react';
-import { ArticleRenderer } from '@/components/articles/renderers/article-renderer';
-import {
-    GuideContentsSidebar,
-    GuideRenderer,
-} from '@/components/articles/renderers/guide-renderer';
-import { SimpleRenderer } from '@/components/articles/renderers/simple-renderer';
+import { ArticleBody } from '@/components/articles/renderers/article-body';
+import { GuideContentsSidebar } from '@/components/articles/renderers/guide-renderer';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { destroy, edit, index } from '@/routes/articles';
 import type { Article } from '@/types';
-
-function ArticleBody({ article }: { article: Article }) {
-    switch (article.body.builder) {
-        case 'simple':
-            return <SimpleRenderer body={article.body} />;
-        case 'v2':
-            return <ArticleRenderer article={article} body={article.body} />;
-        case 'v2-chapters':
-            return <GuideRenderer body={article.body} />;
-    }
-}
 
 export default function ShowArticle({
     article,

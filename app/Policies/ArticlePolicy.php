@@ -9,12 +9,12 @@ use Illuminate\Auth\Access\Response;
 class ArticlePolicy
 {
     /**
-     * Anyone can see a public article; members-only articles and draft notes are visible
-     * only to their author. A hidden article returns 404 so its existence isn't revealed.
+     * Anyone can see a public article and any logged-in user a members-only one; draft notes
+     * are visible only to their author. A hidden article returns 404 so its existence isn't revealed.
      */
     public function view(?User $user, Article $article): Response
     {
-        return ($article->is_public && ! $article->is_note) || $user?->id === $article->user_id
+        return (! $article->is_note && ($article->is_public || $user)) || $user?->id === $article->user_id
             ? Response::allow()
             : Response::denyAsNotFound();
     }

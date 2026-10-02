@@ -173,18 +173,21 @@ class Article extends Model
     }
 
     /**
-     * Limit to articles the given viewer may see: public ones, plus their own.
+     * Limit to articles the given viewer may see: public ones for guests; for members,
+     * members-only articles too, plus their own notes.
      *
      * @param  Builder<Article>  $query
      */
     public function scopeVisibleTo(Builder $query, ?User $viewer): void
     {
         $query->where(function (Builder $query) use ($viewer) {
-            $query->where('is_public', true);
+            if (! $viewer) {
+                $query->where('is_public', true);
 
-            if ($viewer) {
-                $query->orWhere('user_id', $viewer->id);
+                return;
             }
+
+            $query->where('is_note', false)->orWhere('user_id', $viewer->id);
         });
     }
 

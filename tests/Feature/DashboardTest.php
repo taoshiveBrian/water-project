@@ -16,7 +16,6 @@ test('the dashboard shows the three newest articles the user can see, without no
         ['created_at' => now()],
     )->create();
     Article::factory()->note()->create();
-    Article::factory()->membersOnly()->create();
 
     $response = $this->actingAs(User::factory()->create())->get(route('dashboard'));
 

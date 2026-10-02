@@ -3,12 +3,13 @@
 use App\Http\Controllers\ArticleController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DatasetController;
+use App\Http\Controllers\HomeController;
 use App\Http\Controllers\Media\MediaController;
 use App\Http\Controllers\Media\MediaPickerController;
 use App\Http\Controllers\Media\MediaProcessingController;
 use Illuminate\Support\Facades\Route;
 
-Route::inertia('/', 'welcome')->name('home');
+Route::get('/', HomeController::class)->name('home');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', DashboardController::class)->name('dashboard');
