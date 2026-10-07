@@ -1,6 +1,7 @@
 import { Form, Head, Link, usePage } from '@inertiajs/react';
-import { Droplets, Lock } from 'lucide-react';
+import { Lock } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
+import AppLogoIcon from '@/components/app-logo-icon';
 import { ArticleBody } from '@/components/articles/renderers/article-body';
 import { GuideContentsSidebar } from '@/components/articles/renderers/guide-renderer';
 import InputError from '@/components/input-error';
@@ -219,9 +220,7 @@ export default function Welcome({
                 <header className="border-b">
                     <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-4 lg:px-8">
                         <div className="flex items-center gap-3">
-                            <div className="flex size-9 items-center justify-center rounded-lg bg-sky-600 text-white">
-                                <Droplets className="size-5" />
-                            </div>
+                            <AppLogoIcon className="size-9 object-contain" />
                             <span className="text-xl font-semibold tracking-tight">
                                 Water Comb
                             </span>
