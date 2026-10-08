@@ -2,9 +2,11 @@
 
 namespace App\Http\Requests\Media;
 
+use App\Models\Asset;
 use App\Models\MediaSettings;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreMediaRequest extends FormRequest
 {
@@ -33,7 +35,7 @@ class StoreMediaRequest extends FormRequest
                 'mimetypes:'.implode(',', $settings->allowed_mime_types),
                 'max:'.$settings->max_file_size,
             ],
-            'folder' => ['nullable', 'string', 'alpha_dash', 'max:50'],
+            'folder' => ['nullable', 'string', 'alpha_dash', 'max:50', Rule::notIn([Asset::USER_AVATAR_FOLDER])],
         ];
     }
 

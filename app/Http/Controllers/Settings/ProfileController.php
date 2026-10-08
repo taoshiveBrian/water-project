@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Settings;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Settings\ProfileDeleteRequest;
 use App\Http\Requests\Settings\ProfileUpdateRequest;
+use App\Models\Asset;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -22,6 +23,8 @@ class ProfileController extends Controller
         return Inertia::render('settings/profile', [
             'mustVerifyEmail' => $request->user() instanceof MustVerifyEmail,
             'status' => $request->session()->get('status'),
+            'avatarChoices' => Asset::query()->avatarChoices()->latest()->get()
+                ->map(fn (Asset $asset): array => ['id' => $asset->id, 'url' => $asset->thumbnail_url]),
         ]);
     }
 
@@ -51,6 +54,10 @@ class ProfileController extends Controller
         $user = $request->user();
 
         Auth::logout();
+
+        if ($user->avatarImage?->is_private) {
+            $user->avatarImage->delete();
+        }
 
         $user->delete();
 

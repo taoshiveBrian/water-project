@@ -1,6 +1,70 @@
 <?php
 
+use App\Models\Asset;
 use App\Models\User;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
+use Inertia\Testing\AssertableInertia as Assert;
+
+test('profile text and links can be updated, and links must be urls', function () {
+    $user = User::factory()->create();
+
+    $this->actingAs($user)->patch(route('profile.update'), [
+        'name' => $user->name,
+        'email' => $user->email,
+        'profile_text' => 'Hydrologist.',
+        'link_1' => 'https://github.com/example',
+    ])->assertSessionHasNoErrors();
+
+    expect($user->refresh())
+        ->profile_text->toBe('Hydrologist.')
+        ->link_1->toBe('https://github.com/example');
+
+    $this->actingAs($user)->patch(route('profile.update'), [
+        'name' => $user->name,
+        'email' => $user->email,
+        'link_2' => 'javascript:alert(1)',
+    ])->assertSessionHasErrors('link_2');
+});
+
+test('an uploaded avatar is private, and choosing a shared avatar deletes it', function () {
+    Storage::fake('public');
+    $user = User::factory()->create();
+    $shared = Asset::factory()->libraryItem()->create(['subcategory' => 'Avatars']);
+    Asset::factory()->libraryItem()->create(['subcategory' => 'articles']);
+
+    $this->actingAs($user)->get(route('profile.edit'))
+        ->assertInertia(fn (Assert $page) => $page
+            ->has('avatarChoices', 1)
+            ->where('avatarChoices.0.id', $shared->id));
+
+    $this->actingAs($user)->post(route('avatar.update'), ['avatar' => UploadedFile::fake()->image('a.jpg')])
+        ->assertRedirect(route('profile.edit'));
+
+    $uploaded = $user->refresh()->avatarImage;
+
+    expect($uploaded)
+        ->subcategory->toBe('user_avatars')
+        ->is_private->toBeTrue()
+        ->user_id->toBe($user->id);
+    expect($user->avatar)->toBe($uploaded->thumbnail_url);
+
+    $this->actingAs($user)->put(route('avatar.choose'), ['asset_id' => $shared->id]);
+
+    expect($user->refresh()->avatar_id)->toBe($shared->id);
+    expect(Asset::find($uploaded->id))->toBeNull();
+
+    $this->actingAs(User::factory()->create())->put(route('avatar.choose'), ['asset_id' => $shared->id]);
+
+    expect(Asset::find($shared->id))->not->toBeNull();
+});
+
+test('a private avatar cannot be chosen by another user', function () {
+    $private = Asset::factory()->create(['subcategory' => 'Avatars', 'is_private' => true]);
+
+    $this->actingAs(User::factory()->create())->put(route('avatar.choose'), ['asset_id' => $private->id])
+        ->assertSessionHasErrors('asset_id');
+});
 
 test('profile page is displayed', function () {
     $user = User::factory()->create();

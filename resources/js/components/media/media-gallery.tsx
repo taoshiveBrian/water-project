@@ -6,6 +6,7 @@ import {
     FolderInput,
     LayoutGrid,
     List,
+    Lock,
     RefreshCw,
     Search,
     Star,
@@ -403,6 +404,12 @@ export function MediaGallery({
                                         {formatBytes(asset.file_size)}
                                         {asset.is_featured && (
                                             <Star className="size-3 fill-current" />
+                                        )}
+                                        {asset.is_private && (
+                                            <Lock
+                                                className="size-3"
+                                                aria-label="Private"
+                                            />
                                         )}
                                     </span>
                                     <span className="flex flex-wrap gap-1">

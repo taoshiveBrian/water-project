@@ -54,6 +54,19 @@ describe('access', function () {
             ->has('assets.data', 1)
             ->where('assets.data.0.usage.0.id', $article->id));
     });
+
+    test('private assets and their folder are shown only to admins', function () {
+        $owner = User::factory()->create();
+        $private = Asset::factory()->create(['user_id' => $owner->id, 'is_private' => true, 'subcategory' => 'user_avatars']);
+
+        $this->actingAs($owner)->get(route('dashboard.media'))
+            ->assertInertia(fn (Assert $page) => $page->has('assets.data', 0)->has('folders', 0));
+        $this->actingAs($owner)->delete(route('media.destroy', $private))->assertNotFound();
+        $this->actingAs($owner)->getJson(route('media.picker'))->assertJsonCount(0, 'data');
+
+        $this->actingAs(User::factory()->create(['email' => 'test@example.com']))->get(route('dashboard.media'))
+            ->assertInertia(fn (Assert $page) => $page->has('assets.data', 1)->where('folders.0', 'user_avatars'));
+    });
 });
 
 describe('processing', function () {

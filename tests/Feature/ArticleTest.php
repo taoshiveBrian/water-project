@@ -76,6 +76,31 @@ describe('index', function () {
             ->where('filters.category', $slug));
     });
 
+    test('members can filter articles by author, with every author offered', function () {
+        $article = Article::factory()->create();
+        Article::factory()->membersOnly()->create();
+
+        $response = $this->actingAs($article->user)->get(route('articles.index', ['author' => $article->user_id]));
+
+        $response->assertInertia(fn (Assert $page) => $page
+            ->has('authors', 2)
+            ->has('articles.data', 1)
+            ->where('articles.data.0.id', $article->id)
+            ->where('filters.author', $article->user_id));
+    });
+
+    test('guests cannot filter by author', function () {
+        $article = Article::factory()->create();
+        Article::factory()->create();
+
+        $response = $this->get(route('articles.index', ['author' => $article->user_id]));
+
+        $response->assertInertia(fn (Assert $page) => $page
+            ->has('authors', 0)
+            ->has('articles.data', 2)
+            ->where('filters.author', null));
+    });
+
     test('an unknown category filter is rejected', function () {
         $response = $this->get(route('articles.index', ['category' => 'missing']));
 

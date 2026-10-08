@@ -40,6 +40,7 @@ use Illuminate\Support\Facades\Storage;
  * @property string|null $processing_error
  * @property bool $is_featured
  * @property bool $is_library_item Uploaded to the library directly, so it's kept even when unused.
+ * @property bool $is_private Seen in the media library only by media admins, and never offered for articles (e.g. a user's uploaded avatar).
  * @property-read string $url
  * @property-read string $display_url
  * @property-read string $thumbnail_url
@@ -66,6 +67,7 @@ use Illuminate\Support\Facades\Storage;
     'processing_error',
     'is_featured',
     'is_library_item',
+    'is_private',
 ])]
 class Asset extends Model
 {
@@ -73,6 +75,16 @@ class Asset extends Model
     use HasFactory;
 
     public const array FILE_TYPES = ['image', 'video', 'audio', 'document'];
+
+    /**
+     * Shared avatars anyone can choose, uploaded through the media library.
+     */
+    public const string AVATAR_FOLDER = 'Avatars';
+
+    /**
+     * Users' own uploaded avatars, which are private.
+     */
+    public const string USER_AVATAR_FOLDER = 'user_avatars';
 
     /**
      * Get the attributes that should be cast.
@@ -89,6 +101,7 @@ class Asset extends Model
             'processing_status' => ProcessingStatus::class,
             'is_featured' => 'boolean',
             'is_library_item' => 'boolean',
+            'is_private' => 'boolean',
         ];
     }
 
@@ -160,6 +173,34 @@ class Asset extends Model
     public function scopeImages(Builder $query): void
     {
         $query->where('category', 'image');
+    }
+
+    /**
+     * Shared avatars anyone can choose.
+     *
+     * @param  Builder<Asset>  $query
+     */
+    public function scopeAvatarChoices(Builder $query): void
+    {
+        $query->images()->where('subcategory', self::AVATAR_FOLDER)->where('is_private', false);
+    }
+
+    /**
+     * Limit to assets the viewer may see in the media library: private assets are
+     * for media admins only, even to their uploader.
+     *
+     * @param  Builder<Asset>  $query
+     */
+    public function scopeVisibleTo(Builder $query, User $viewer): void
+    {
+        if (! $viewer->can('view-private-media')) {
+            $query->where('is_private', false);
+        }
+    }
+
+    public function isVisibleTo(User $viewer): bool
+    {
+        return ! $this->is_private || $viewer->can('view-private-media');
     }
 
     /**

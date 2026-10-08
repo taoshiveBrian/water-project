@@ -20,6 +20,7 @@ class MediaPickerController extends Controller
 
         $images = Asset::query()
             ->images()
+            ->where('is_private', false)
             ->when($search, fn ($query, string $term) => $query->search($term))
             ->latest()
             ->paginate(24)

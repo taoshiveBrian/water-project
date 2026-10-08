@@ -34,11 +34,16 @@ class AppServiceProvider extends ServiceProvider
      */
     protected function configureGates(): void
     {
-        Gate::define('view-notes', fn (User $user): bool => in_array(
+        $isAdmin = fn (User $user): bool => in_array(
             strtolower($user->email),
             ['admin@example.com', 'admin@example.com', 'test@example.com'],
             true,
-        ));
+        );
+
+        Gate::define('view-notes', $isAdmin);
+
+        // Other users' private assets, such as their uploaded avatars.
+        Gate::define('view-private-media', $isAdmin);
     }
 
     /**

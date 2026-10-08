@@ -1,26 +1,61 @@
-import { Head, Link, usePage } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import { Lock, Plus } from 'lucide-react';
 import Heading from '@/components/heading';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import { create, index, show } from '@/routes/articles';
 import type { ArticleSummary, Category, Paginated } from '@/types';
+
+type Filters = { category: string | null; author: number | null };
+
+const ALL_AUTHORS = 'all';
+
+/**
+ * The index query for the given filters, leaving out empty ones.
+ */
+function filterQuery({ category, author }: Filters) {
+    return {
+        ...(category ? { category } : {}),
+        ...(author ? { author } : {}),
+    };
+}
 
 export default function ArticlesIndex({
     articles,
     filters,
     categories,
+    authors,
 }: {
     articles: Paginated<ArticleSummary>;
-    filters: { category: string | null };
+    filters: Filters;
     categories: Category[];
+    authors: { id: number; name: string }[];
 }) {
     const { auth } = usePage().props;
     const tabs = [
         { slug: null, name: 'All' },
         ...categories.map(({ slug, name }) => ({ slug, name })),
     ];
+
+    const filterByAuthor = (value: string) =>
+        router.get(
+            index.url({
+                query: filterQuery({
+                    ...filters,
+                    author: value === ALL_AUTHORS ? null : Number(value),
+                }),
+            }),
+            {},
+            { preserveScroll: true },
+        );
 
     return (
         <>
@@ -41,24 +76,60 @@ export default function ArticlesIndex({
                     )}
                 </div>
 
-                <nav className="flex gap-1 overflow-x-auto border-b">
-                    {tabs.map((tab) => (
-                        <Link
-                            key={tab.slug ?? 'all'}
-                            href={index({
-                                query: tab.slug ? { category: tab.slug } : {},
-                            })}
-                            className={cn(
-                                '-mb-px shrink-0 border-b-2 px-3 py-2 text-sm whitespace-nowrap',
-                                filters.category === tab.slug
-                                    ? 'border-foreground font-medium'
-                                    : 'border-transparent text-muted-foreground hover:text-foreground',
-                            )}
+                <div className="flex flex-wrap items-center gap-4">
+                    <nav className="flex min-w-0 flex-1 gap-1 overflow-x-auto border-b">
+                        {tabs.map((tab) => (
+                            <Link
+                                key={tab.slug ?? 'all'}
+                                href={index({
+                                    query: filterQuery({
+                                        ...filters,
+                                        category: tab.slug,
+                                    }),
+                                })}
+                                className={cn(
+                                    '-mb-px shrink-0 border-b-2 px-3 py-2 text-sm whitespace-nowrap',
+                                    filters.category === tab.slug
+                                        ? 'border-foreground font-medium'
+                                        : 'border-transparent text-muted-foreground hover:text-foreground',
+                                )}
+                            >
+                                {tab.name}
+                            </Link>
+                        ))}
+                    </nav>
+
+                    {authors.length > 1 && (
+                        <Select
+                            value={
+                                filters.author
+                                    ? String(filters.author)
+                                    : ALL_AUTHORS
+                            }
+                            onValueChange={filterByAuthor}
                         >
-                            {tab.name}
-                        </Link>
-                    ))}
-                </nav>
+                            <SelectTrigger
+                                className="w-full sm:w-48"
+                                aria-label="Filter by author"
+                            >
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value={ALL_AUTHORS}>
+                                    All authors
+                                </SelectItem>
+                                {authors.map((author) => (
+                                    <SelectItem
+                                        key={author.id}
+                                        value={String(author.id)}
+                                    >
+                                        {author.name}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    )}
+                </div>
 
                 {articles.data.length === 0 ? (
                     <p className="py-12 text-center text-sm text-muted-foreground">

@@ -148,7 +148,7 @@ trait ArticleValidationRules
      */
     private function libraryImageRules(): array
     {
-        return ['nullable', 'integer', Rule::exists('assets', 'id')->where('category', 'image')];
+        return ['nullable', 'integer', Rule::exists('assets', 'id')->where('category', 'image')->where('is_private', false)];
     }
 
     /**

@@ -26,6 +26,7 @@ export type MediaAsset = {
     processing_error: string | null;
     is_featured: boolean;
     is_library_item: boolean;
+    is_private: boolean;
     uploaded_by: string | null;
     created_at: string;
     /** Articles that use this file. Only present in the gallery. */

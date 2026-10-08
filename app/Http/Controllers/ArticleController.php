@@ -11,6 +11,7 @@ use App\Http\Resources\ArticleResource;
 use App\Http\Resources\ArticleSummaryResource;
 use App\Models\Article;
 use App\Models\Category;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -22,18 +23,21 @@ use Inertia\Response;
 class ArticleController extends Controller
 {
     /**
-     * List the published articles the viewer can see, optionally filtered by category slug.
+     * List the published articles the viewer can see, optionally filtered by category slug,
+     * and for members, by author.
      */
     public function index(Request $request): Response
     {
         $filters = $request->validate([
             'category' => ['nullable', 'string', Rule::exists('categories', 'slug')],
+            'author' => [Rule::excludeIf(! $request->user()), 'nullable', 'integer', Rule::exists('users', 'id')],
         ]);
 
-        $articles = Article::query()
-            ->published()
-            ->visibleTo($request->user())
+        $visible = fn () => Article::query()->published()->visibleTo($request->user());
+
+        $articles = $visible()
             ->when($filters['category'] ?? null, fn ($query, string $slug) => $query->whereRelation('category', 'slug', $slug))
+            ->when($filters['author'] ?? null, fn ($query, $userId) => $query->where('user_id', $userId))
             ->with(['user', 'category', 'coverImage'])
             ->latest()
             ->paginate(12)
@@ -42,8 +46,14 @@ class ArticleController extends Controller
 
         return Inertia::render('articles/index', [
             'articles' => $articles,
-            'filters' => ['category' => $filters['category'] ?? null],
+            'filters' => [
+                'category' => $filters['category'] ?? null,
+                'author' => isset($filters['author']) ? (int) $filters['author'] : null,
+            ],
             'categories' => $this->categoryOptions(),
+            'authors' => $request->user()
+                ? User::query()->whereIn('id', $visible()->select('user_id'))->orderBy('name')->get(['id', 'name'])
+                : [],
         ]);
     }
 

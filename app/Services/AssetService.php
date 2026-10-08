@@ -27,12 +27,14 @@ class AssetService
      * Store an upload and schedule its processing.
      *
      * @param  bool  $isLibraryItem  true for media library uploads, which are kept even when unused
+     * @param  bool  $isPrivate  true to hide it in the media library from everyone but media admins
      */
     public function store(
         UploadedFile $file,
         ?string $subcategory = null,
         ?User $owner = null,
         bool $isLibraryItem = false,
+        bool $isPrivate = false,
     ): Asset {
         $mimeType = $file->getMimeType();
         $category = Asset::categoryForMime($mimeType);
@@ -55,6 +57,7 @@ class AssetService
             'subcategory' => $subcategory,
             'processing_status' => ProcessingStatus::Pending,
             'is_library_item' => $isLibraryItem,
+            'is_private' => $isPrivate,
         ]);
 
         $this->processor->schedule($asset);

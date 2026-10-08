@@ -38,6 +38,7 @@ class MediaController extends Controller
         ]);
 
         $assets = Asset::query()
+            ->visibleTo($request->user())
             ->with('user')
             ->when($filters['search'] ?? null, fn ($query, string $search) => $query->search($search))
             ->when($filters['type'] ?? null, fn ($query, string $type) => $query->where('category', $type))
@@ -61,7 +62,7 @@ class MediaController extends Controller
                 ...$this->present($asset),
                 'usage' => $usage[$asset->id] ?? [],
             ]),
-            'folders' => Asset::query()->whereNotNull('subcategory')->distinct()->orderBy('subcategory')->pluck('subcategory'),
+            'folders' => Asset::query()->visibleTo($request->user())->whereNotNull('subcategory')->distinct()->orderBy('subcategory')->pluck('subcategory'),
             'stats' => [
                 'total_count' => Asset::count(),
                 'total_size' => (int) Asset::sum('file_size'),
@@ -76,7 +77,7 @@ class MediaController extends Controller
                 'ini_file' => (string) php_ini_loaded_file(),
             ],
             'queueStats' => fn () => $this->queueStats(),
-            'recentJobs' => fn () => Asset::query()->with('user')
+            'recentJobs' => fn () => Asset::query()->visibleTo($request->user())->with('user')
                 ->whereIn('processing_status', [ProcessingStatus::Pending, ProcessingStatus::Processing, ProcessingStatus::Failed])
                 ->latest('updated_at')
                 ->limit(25)
@@ -108,11 +109,15 @@ class MediaController extends Controller
      */
     public function update(Request $request, Asset $asset): RedirectResponse
     {
+        abort_unless($asset->isVisibleTo($request->user()), 404);
+
         $validated = $request->validate([
             'title' => ['nullable', 'string', 'max:255'],
             'alt_text' => ['nullable', 'string', 'max:255'],
             'description' => ['nullable', 'string', 'max:2000'],
-            'subcategory' => ['nullable', 'string', 'alpha_dash', 'max:50'],
+            'subcategory' => ['nullable', 'string', 'alpha_dash', 'max:50', Rule::notIn(
+                $asset->subcategory === Asset::USER_AVATAR_FOLDER ? [] : [Asset::USER_AVATAR_FOLDER],
+            )],
             'is_featured' => ['required', 'boolean'],
         ]);
 
@@ -126,8 +131,10 @@ class MediaController extends Controller
     /**
      * Delete an asset and its files. Refused while any article uses it.
      */
-    public function destroy(Asset $asset): RedirectResponse
+    public function destroy(Request $request, Asset $asset): RedirectResponse
     {
+        abort_unless($asset->isVisibleTo($request->user()), 404);
+
         $usedBy = $this->usage->forAssets([$asset->id])[$asset->id];
 
         if ($usedBy !== []) {
@@ -166,7 +173,7 @@ class MediaController extends Controller
     public function bulkFolder(Request $request): RedirectResponse
     {
         $folder = $request->validate([
-            'folder' => ['nullable', 'string', 'alpha_dash', 'max:50'],
+            'folder' => ['nullable', 'string', 'alpha_dash', 'max:50', Rule::notIn([Asset::USER_AVATAR_FOLDER])],
         ])['folder'] ?? null;
 
         $assets = $this->selectedAssets($request);
@@ -199,7 +206,7 @@ class MediaController extends Controller
             'ids.*' => ['integer', 'distinct'],
         ])['ids'];
 
-        return Asset::whereKey($ids)->get();
+        return Asset::visibleTo($request->user())->whereKey($ids)->get();
     }
 
     /**
@@ -240,6 +247,7 @@ class MediaController extends Controller
             'processing_error' => $asset->processing_error,
             'is_featured' => $asset->is_featured,
             'is_library_item' => $asset->is_library_item,
+            'is_private' => $asset->is_private,
             'uploaded_by' => $asset->user?->name,
             'created_at' => $asset->created_at,
         ];

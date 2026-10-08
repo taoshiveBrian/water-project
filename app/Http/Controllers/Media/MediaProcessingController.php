@@ -19,8 +19,10 @@ class MediaProcessingController extends Controller
 {
     public function __construct(private ImageProcessingService $processor) {}
 
-    public function single(Asset $asset): RedirectResponse
+    public function single(Request $request, Asset $asset): RedirectResponse
     {
+        abort_unless($asset->isVisibleTo($request->user()), 404);
+
         return $this->run(collect([$asset]));
     }
 
@@ -31,7 +33,7 @@ class MediaProcessingController extends Controller
             'ids.*' => ['integer', 'distinct'],
         ])['ids'];
 
-        return $this->run(Asset::whereKey($ids)->get());
+        return $this->run(Asset::visibleTo($request->user())->whereKey($ids)->get());
     }
 
     public function all(Request $request): RedirectResponse
