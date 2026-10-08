@@ -12,6 +12,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { picker } from '@/routes/media';
+import { cn, pixelated } from '@/lib/utils';
 import type { Paginated, PickedImage } from '@/types';
 
 /**
@@ -106,7 +107,10 @@ export function MediaPickerDialog({
                                     <img
                                         src={image.thumbnail_url}
                                         alt={image.alt_text ?? ''}
-                                        className="aspect-square w-full rounded-md border object-cover transition group-hover:ring-2 group-hover:ring-ring"
+                                        className={cn(
+                                            'aspect-square w-full rounded-md border object-cover transition group-hover:ring-2 group-hover:ring-ring',
+                                            pixelated(image.is_pixel_art),
+                                        )}
                                     />
                                     <span className="truncate text-xs text-muted-foreground">
                                         {image.title || image.original_filename}

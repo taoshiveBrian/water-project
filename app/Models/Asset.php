@@ -220,7 +220,7 @@ class Asset extends Model
      */
     protected function displayUrl(): Attribute
     {
-        return Attribute::get(fn (): string => $this->urlFor($this->sizes['large'] ?? $this->path));
+        return Attribute::get(fn (): string => $this->variantUrl('large'));
     }
 
     /**
@@ -230,9 +230,26 @@ class Asset extends Model
      */
     protected function thumbnailUrl(): Attribute
     {
-        return Attribute::get(fn (): string => $this->urlFor(
-            $this->sizes['thumbnail'] ?? $this->sizes['medium'] ?? $this->path,
-        ));
+        return Attribute::get(fn (): string => $this->variantUrl('thumbnail', 'medium'));
+    }
+
+    /**
+     * The URL of the first size variant that exists, else the served file. Pixel art
+     * always gets its untouched original, since resizing or re-encoding smears pixels.
+     */
+    public function variantUrl(string ...$sizes): string
+    {
+        if ($this->isPixelArt()) {
+            return $this->urlFor($this->original_path ?? $this->path);
+        }
+
+        foreach ($sizes as $size) {
+            if (isset($this->sizes[$size])) {
+                return $this->urlFor($this->sizes[$size]);
+            }
+        }
+
+        return $this->urlFor($this->path);
     }
 
     /**
@@ -246,6 +263,25 @@ class Asset extends Model
     public function isImage(): bool
     {
         return str_starts_with($this->mime_type ?? '', 'image/');
+    }
+
+    /**
+     * Images at or under the media settings' pixel art size: shown from the original
+     * file and, when enlarged, scaled with hard pixel edges instead of smoothing.
+     */
+    public function isPixelArt(): bool
+    {
+        $maxBytes = self::pixelArtMaxBytes();
+
+        return $maxBytes > 0 && $this->isImage() && $this->file_size !== null && $this->file_size <= $maxBytes;
+    }
+
+    /**
+     * Read once per request, since every image URL asks.
+     */
+    private static function pixelArtMaxBytes(): int
+    {
+        return once(fn (): int => MediaSettings::current()->pixel_art_max_size * 1024);
     }
 
     /**

@@ -16,6 +16,7 @@ function tagImages(article: Article, body: ArticleLayoutBody): TagImages {
             images.set(entry.tag, {
                 url: image.url,
                 displayMode: image.display ?? entry.displayMode,
+                pixelated: image.pixelated,
             });
         }
     }

@@ -3,8 +3,7 @@ import { lazy, Suspense, useEffect, useState } from 'react';
 import Heading from '@/components/heading';
 import { TabNav } from '@/components/tab-nav';
 import { Skeleton } from '@/components/ui/skeleton';
-import { dashboard } from '@/routes';
-import { map } from '@/routes/dashboard';
+import { map } from '@/routes';
 
 const ZoneMap = lazy(() => import('@/components/map/zone-map'));
 
@@ -60,8 +59,5 @@ export default function MapPage() {
 }
 
 MapPage.layout = {
-    breadcrumbs: [
-        { title: 'Dashboard', href: dashboard() },
-        { title: 'Map', href: map() },
-    ],
+    breadcrumbs: [{ title: 'Map', href: map() }],
 };

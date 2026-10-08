@@ -1,10 +1,11 @@
 import { Head, Link } from '@inertiajs/react';
 import { Lock, NotebookPen, Pencil, Trash2 } from 'lucide-react';
+import { AuthorByline } from '@/components/articles/author-byline';
 import { ArticleBody } from '@/components/articles/renderers/article-body';
 import { GuideContentsSidebar } from '@/components/articles/renderers/guide-renderer';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
+import { cn, pixelated } from '@/lib/utils';
 import { destroy, edit, index } from '@/routes/articles';
 import type { Article } from '@/types';
 
@@ -63,12 +64,10 @@ export default function ShowArticle({
                                     Members only
                                 </Badge>
                             )}
-                            <span>
-                                {article.author.name} ·{' '}
-                                {new Date(
-                                    article.created_at,
-                                ).toLocaleDateString()}
-                            </span>
+                            <AuthorByline
+                                author={article.author}
+                                date={article.created_at}
+                            />
                         </div>
                         {(can.update || can.delete) && (
                             <div className="flex gap-2">
@@ -104,7 +103,12 @@ export default function ShowArticle({
                         <img
                             src={coverUrl}
                             alt=""
-                            className="mx-auto h-auto max-h-[70vh] w-auto max-w-full rounded-xl"
+                            className={cn(
+                                'mx-auto h-auto max-h-[70vh] w-auto max-w-full rounded-xl',
+                                pixelated(
+                                    article.images.cover_image?.pixelated,
+                                ),
+                            )}
                         />
                     )}
 

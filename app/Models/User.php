@@ -24,7 +24,8 @@ use Illuminate\Support\Carbon;
  * @property string|null $link_2
  * @property string|null $link_3
  * @property int|null $avatar_id A media library asset in the "avatars" folder.
- * @property-read string|null $avatar The avatar's thumbnail URL.
+ * @property-read string|null $avatar The avatar's URL at avatar size.
+ * @property-read bool $avatar_pixelated
  * @property string|null $two_factor_secret
  * @property string|null $two_factor_recovery_codes
  * @property Carbon|null $two_factor_confirmed_at
@@ -34,7 +35,7 @@ use Illuminate\Support\Carbon;
  */
 #[Fillable(['name', 'email', 'password', 'profile_text', 'link_1', 'link_2', 'link_3'])]
 #[Hidden(['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token', 'avatarImage'])]
-#[Appends(['avatar'])]
+#[Appends(['avatar', 'avatar_pixelated'])]
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
@@ -54,6 +55,16 @@ class User extends Authenticatable
     protected function avatar(): Attribute
     {
         return Attribute::get(fn (): ?string => $this->avatarImage?->thumbnail_url);
+    }
+
+    /**
+     * Whether the avatar is pixel art, to be shown with hard pixel edges.
+     *
+     * @return Attribute<bool, never>
+     */
+    protected function avatarPixelated(): Attribute
+    {
+        return Attribute::get(fn (): bool => $this->avatarImage?->isPixelArt() ?? false);
     }
 
     /**

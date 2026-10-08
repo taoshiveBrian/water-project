@@ -27,6 +27,7 @@ export type MediaAsset = {
     is_featured: boolean;
     is_library_item: boolean;
     is_private: boolean;
+    is_pixel_art: boolean;
     uploaded_by: string | null;
     created_at: string;
     /** Articles that use this file. Only present in the gallery. */
@@ -49,6 +50,8 @@ export type MediaSettings = {
     processing_method: ProcessingMethod;
     allowed_mime_types: string[];
     max_file_size: number;
+    /** Kilobytes. Images this size or smaller render as pixel art; 0 turns it off. */
+    pixel_art_max_size: number;
 };
 
 export type MediaFilters = {
@@ -77,6 +80,7 @@ export type PickedImage = {
     original_filename: string;
     thumbnail_url: string;
     alt_text: string | null;
+    is_pixel_art?: boolean;
 };
 
 /**

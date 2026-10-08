@@ -5,6 +5,7 @@ namespace App\Concerns;
 use App\Enums\ArticleTemplate;
 use App\Models\Article;
 use Illuminate\Contracts\Validation\ValidationRule;
+use Illuminate\Database\Query\Builder;
 use Illuminate\Validation\Rule;
 
 /**
@@ -148,7 +149,9 @@ trait ArticleValidationRules
      */
     private function libraryImageRules(): array
     {
-        return ['nullable', 'integer', Rule::exists('assets', 'id')->where('category', 'image')->where('is_private', false)];
+        // A closure, because a plain `where('is_private', false)` reaches SQLite as '' and never matches.
+        return ['nullable', 'integer', Rule::exists('assets', 'id')
+            ->where(fn (Builder $query) => $query->where('category', 'image')->where('is_private', false))];
     }
 
     /**

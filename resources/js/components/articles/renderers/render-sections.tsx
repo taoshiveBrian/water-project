@@ -5,9 +5,14 @@ import {
     INLINE_TAG_PATTERN,
 } from '@/components/articles/inline-images';
 import { linkify } from '@/components/articles/inline-links';
+import { cn, pixelated } from '@/lib/utils';
 import type { ArticleSection, DisplayMode } from '@/types';
 
-export type ResolvedImage = { url: string; displayMode: DisplayMode };
+export type ResolvedImage = {
+    url: string;
+    displayMode: DisplayMode;
+    pixelated?: boolean;
+};
 
 export type TagImages = Map<string, ResolvedImage>;
 
@@ -39,7 +44,10 @@ export function InlineText({
                     key={`${tag}-${match.index}`}
                     src={image.url}
                     alt=""
-                    className={displayModeClasses[image.displayMode]}
+                    className={cn(
+                        displayModeClasses[image.displayMode],
+                        pixelated(image.pixelated),
+                    )}
                 />,
             );
         }
@@ -99,7 +107,10 @@ function renderSection(
                 <img
                     src={image.url}
                     alt=""
-                    className="mx-auto h-auto max-h-[70vh] w-auto max-w-full rounded-xl"
+                    className={cn(
+                        'mx-auto h-auto max-h-[70vh] w-auto max-w-full rounded-xl',
+                        pixelated(image.pixelated),
+                    )}
                 />
             ) : null;
         }

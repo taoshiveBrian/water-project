@@ -38,7 +38,7 @@ class ArticleController extends Controller
         $articles = $visible()
             ->when($filters['category'] ?? null, fn ($query, string $slug) => $query->whereRelation('category', 'slug', $slug))
             ->when($filters['author'] ?? null, fn ($query, $userId) => $query->where('user_id', $userId))
-            ->with(['user', 'category', 'coverImage'])
+            ->with(['user.avatarImage', 'category', 'coverImage'])
             ->latest()
             ->paginate(12)
             ->withQueryString()
@@ -89,7 +89,7 @@ class ArticleController extends Controller
     {
         Gate::authorize('view', $article);
 
-        $article->load(['user', 'category', ...Article::imageRelations()]);
+        $article->load(['user.avatarImage', 'category', ...Article::imageRelations()]);
 
         return Inertia::render('articles/show', [
             'article' => ArticleResource::make($article)->resolve($request),
@@ -135,7 +135,7 @@ class ArticleController extends Controller
     {
         Gate::authorize('update', $article);
 
-        $article->load(['user', 'category', ...Article::imageRelations()]);
+        $article->load(['user.avatarImage', 'category', ...Article::imageRelations()]);
 
         return Inertia::render('articles/edit', [
             'article' => ArticleResource::make($article)->resolve($request),

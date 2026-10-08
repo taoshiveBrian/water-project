@@ -21,9 +21,9 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
-import { dashboard, home } from '@/routes';
+import { dashboard, home, map } from '@/routes';
 import { index as articlesIndex } from '@/routes/articles';
-import { extraInfo, map, media, notes } from '@/routes/dashboard';
+import { extraInfo, media, notes } from '@/routes/dashboard';
 import type { NavItem } from '@/types';
 
 const mainNavItems: NavItem[] = [

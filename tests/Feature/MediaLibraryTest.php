@@ -236,6 +236,7 @@ describe('settings', function () {
             'compression_quality' => 70,
             'processing_method' => 'queue',
             'max_file_size' => 5000,
+            'pixel_art_max_size' => 3,
             'allowed_mime_types' => ['image/jpeg', 'image/png'],
             'sizes' => [['name' => 'banner', 'width' => 1200, 'height' => 400, 'crop' => true, 'enabled' => true]],
         ])->assertSessionHasNoErrors();
@@ -244,6 +245,18 @@ describe('settings', function () {
         expect($settings->compress_images)->toBeFalse();
         expect($settings->processing_method)->toBe(ProcessingMethod::Queue);
         expect($settings->sizes[0]['name'])->toBe('banner');
+        expect($settings->pixel_art_max_size)->toBe(3);
+    });
+
+    test('images up to the pixel art size are served from their original file', function () {
+        $files = ['original_path' => 'assets/image/originals/a.png', 'sizes' => ['thumbnail' => 'assets/image/sizes/thumbnail_a.png']];
+        $pixelArt = Asset::factory()->create(['file_size' => 5 * 1024, ...$files]);
+        $photo = Asset::factory()->create(['file_size' => 5 * 1024 + 1, ...$files]);
+
+        expect($pixelArt->isPixelArt())->toBeTrue();
+        expect($pixelArt->thumbnail_url)->toEndWith('originals/a.png');
+        expect($photo->isPixelArt())->toBeFalse();
+        expect($photo->thumbnail_url)->toEndWith('thumbnail_a.png');
     });
 
     test('a size needs a width or a height', function () {

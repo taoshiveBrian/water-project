@@ -48,6 +48,7 @@ export type GuidePoolEntry = {
     displayMode: DisplayMode;
     assetId?: number | null;
     url?: string | null;
+    pixelated?: boolean;
 };
 
 export type GuideChapter = {
@@ -83,6 +84,7 @@ export type ArticleBody = SimpleBody | ArticleLayoutBody | GuideBody;
 
 export type ArticleImage = {
     url: string | null;
+    pixelated?: boolean;
     display: DisplayMode | null;
 };
 
@@ -97,10 +99,17 @@ export type Article = {
     is_note: boolean;
     source_label: string | null;
     source_url: string | null;
-    author: { id: number; name: string };
+    author: ArticleAuthor;
     images: Record<ImageField, ArticleImage>;
     created_at: string;
     updated_at: string;
+};
+
+export type ArticleAuthor = {
+    id: number;
+    name: string;
+    avatar: string | null;
+    avatar_pixelated: boolean;
 };
 
 export type ArticleSummary = {
@@ -109,8 +118,9 @@ export type ArticleSummary = {
     template: ArticleTemplate;
     title: string;
     is_public: boolean;
-    author: string;
+    author: ArticleAuthor;
     cover_image_url: string | null;
+    cover_image_pixelated: boolean;
     created_at: string;
 };
 

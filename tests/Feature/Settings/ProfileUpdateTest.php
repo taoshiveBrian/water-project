@@ -35,8 +35,10 @@ test('an uploaded avatar is private, and choosing a shared avatar deletes it', f
 
     $this->actingAs($user)->get(route('profile.edit'))
         ->assertInertia(fn (Assert $page) => $page
-            ->has('avatarChoices', 1)
-            ->where('avatarChoices.0.id', $shared->id));
+            ->missing('avatarChoices')
+            ->reloadOnly('avatarChoices', fn (Assert $reload) => $reload
+                ->has('avatarChoices', 1)
+                ->where('avatarChoices.0.id', $shared->id)));
 
     $this->actingAs($user)->post(route('avatar.update'), ['avatar' => UploadedFile::fake()->image('a.jpg')])
         ->assertRedirect(route('profile.edit'));
@@ -57,6 +59,17 @@ test('an uploaded avatar is private, and choosing a shared avatar deletes it', f
     $this->actingAs(User::factory()->create())->put(route('avatar.choose'), ['asset_id' => $shared->id]);
 
     expect(Asset::find($shared->id))->not->toBeNull();
+});
+
+test('a pixel art avatar is flagged and shown from the full file', function () {
+    $tiny = Asset::factory()->libraryItem()->create(['subcategory' => 'Avatars', 'file_size' => 600]);
+    $user = User::factory()->create();
+
+    $this->actingAs($user)->put(route('avatar.choose'), ['asset_id' => $tiny->id]);
+
+    expect($user->refresh())
+        ->avatar->toBe($tiny->url)
+        ->avatar_pixelated->toBeTrue();
 });
 
 test('a private avatar cannot be chosen by another user', function () {

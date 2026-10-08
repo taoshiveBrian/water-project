@@ -23,8 +23,9 @@ class ProfileController extends Controller
         return Inertia::render('settings/profile', [
             'mustVerifyEmail' => $request->user() instanceof MustVerifyEmail,
             'status' => $request->session()->get('status'),
-            'avatarChoices' => Asset::query()->avatarChoices()->latest()->get()
-                ->map(fn (Asset $asset): array => ['id' => $asset->id, 'url' => $asset->thumbnail_url]),
+            // Loaded when the avatar dialog opens.
+            'avatarChoices' => Inertia::optional(fn () => Asset::query()->avatarChoices()->latest()->get()
+                ->map(fn (Asset $asset): array => ['id' => $asset->id, 'url' => $asset->thumbnail_url, 'pixelated' => $asset->isPixelArt()])),
         ]);
     }
 

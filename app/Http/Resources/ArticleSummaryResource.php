@@ -7,7 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
- * The fields an article card needs. Expects `user`, `category` and `coverImage` loaded.
+ * The fields an article card needs. Expects `user.avatarImage`, `category` and `coverImage` loaded.
  *
  * @mixin Article
  */
@@ -26,8 +26,9 @@ class ArticleSummaryResource extends JsonResource
             'template' => $this->template,
             'title' => $this->title,
             'is_public' => $this->is_public,
-            'author' => $this->user->name,
-            'cover_image_url' => $this->coverImage ? ($this->coverImage->sizeUrls()['medium'] ?? $this->coverImage->url) : null,
+            'author' => AuthorResource::make($this->user)->resolve($request),
+            'cover_image_url' => $this->coverImage?->variantUrl('medium'),
+            'cover_image_pixelated' => $this->coverImage?->isPixelArt() ?? false,
             'created_at' => $this->created_at,
         ];
     }

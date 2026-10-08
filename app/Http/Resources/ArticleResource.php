@@ -31,10 +31,7 @@ class ArticleResource extends JsonResource
             'is_note' => $this->is_note,
             'source_label' => $this->source_label,
             'source_url' => $this->source_url,
-            'author' => [
-                'id' => $this->user->id,
-                'name' => $this->user->name,
-            ],
+            'author' => AuthorResource::make($this->user)->resolve($request),
             'images' => $this->images(),
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
@@ -55,13 +52,13 @@ class ArticleResource extends JsonResource
             return $body;
         }
 
-        $urls = Asset::whereKey($this->resource->chapterAssetIds())
-            ->get()
-            ->mapWithKeys(fn (Asset $asset): array => [$asset->id => $asset->display_url]);
+        $assets = Asset::whereKey($this->resource->chapterAssetIds())->get()->keyBy('id');
 
         foreach ($body['chapters'] as $chapterIndex => $chapter) {
             foreach ($chapter['pool'] ?? [] as $entryIndex => $entry) {
-                $body['chapters'][$chapterIndex]['pool'][$entryIndex]['url'] = $urls[$entry['assetId'] ?? 0] ?? null;
+                $asset = $assets[$entry['assetId'] ?? 0] ?? null;
+                $body['chapters'][$chapterIndex]['pool'][$entryIndex]['url'] = $asset?->display_url;
+                $body['chapters'][$chapterIndex]['pool'][$entryIndex]['pixelated'] = $asset?->isPixelArt() ?? false;
             }
         }
 
@@ -71,15 +68,18 @@ class ArticleResource extends JsonResource
     /**
      * Every image slot keyed by field, with the live URL and display mode.
      *
-     * @return array<string, array{url: string|null, display: string|null}>
+     * @return array<string, array{url: string|null, pixelated: bool, display: string|null}>
      */
     private function images(): array
     {
         $images = [];
 
         foreach (Article::IMAGE_FIELDS as $field) {
+            $asset = $this->resource->imageAsset($field);
+
             $images[$field] = [
-                'url' => $this->resource->imageAsset($field)?->display_url,
+                'url' => $asset?->display_url,
+                'pixelated' => $asset?->isPixelArt() ?? false,
                 'display' => $field === 'cover_image' ? null : $this->{"{$field}_display"},
             ];
         }

@@ -658,7 +658,7 @@ function OtherTab() {
                         ],
                         [
                             'Map',
-                            '/dashboard/map. The service-zone map (see below).',
+                            '/map. The service-zone map (see below). Public.',
                         ],
                         [
                             'Notes',

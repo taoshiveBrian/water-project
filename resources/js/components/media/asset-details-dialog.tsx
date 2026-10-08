@@ -16,6 +16,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { show as showArticle } from '@/routes/articles';
 import { destroy, process as processAsset, update } from '@/routes/media';
+import { cn, pixelated } from '@/lib/utils';
 import type { MediaAsset } from '@/types';
 
 /**
@@ -53,9 +54,16 @@ export function AssetDetailsDialog({
                     <div className="grid content-start gap-3 text-sm">
                         {isImage ? (
                             <img
-                                src={asset.size_urls.medium ?? asset.url}
+                                src={
+                                    asset.is_pixel_art
+                                        ? asset.thumbnail_url
+                                        : (asset.size_urls.medium ?? asset.url)
+                                }
                                 alt={asset.alt_text ?? ''}
-                                className="w-full rounded-lg border"
+                                className={cn(
+                                    'w-full rounded-lg border',
+                                    pixelated(asset.is_pixel_art),
+                                )}
                             />
                         ) : (
                             <a

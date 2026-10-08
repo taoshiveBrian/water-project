@@ -18,6 +18,7 @@ use Illuminate\Support\Carbon;
  * @property ProcessingMethod $processing_method
  * @property list<string> $allowed_mime_types
  * @property int $max_file_size Kilobytes.
+ * @property int $pixel_art_max_size Kilobytes. Images this size or smaller are treated as pixel art; 0 turns it off.
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
@@ -29,6 +30,7 @@ use Illuminate\Support\Carbon;
     'processing_method',
     'allowed_mime_types',
     'max_file_size',
+    'pixel_art_max_size',
 ])]
 class MediaSettings extends Model
 {
@@ -47,6 +49,7 @@ class MediaSettings extends Model
             'processing_method' => ProcessingMethod::class,
             'allowed_mime_types' => 'array',
             'max_file_size' => 'integer',
+            'pixel_art_max_size' => 'integer',
         ];
     }
 
@@ -80,6 +83,7 @@ class MediaSettings extends Model
                 'application/pdf',
             ],
             'max_file_size' => 10240,
+            'pixel_art_max_size' => 5,
         ];
     }
 

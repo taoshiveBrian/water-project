@@ -248,6 +248,7 @@ class MediaController extends Controller
             'is_featured' => $asset->is_featured,
             'is_library_item' => $asset->is_library_item,
             'is_private' => $asset->is_private,
+            'is_pixel_art' => $asset->isPixelArt(),
             'uploaded_by' => $asset->user?->name,
             'created_at' => $asset->created_at,
         ];

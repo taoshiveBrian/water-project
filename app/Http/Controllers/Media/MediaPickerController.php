@@ -32,6 +32,7 @@ class MediaPickerController extends Controller
                 'alt_text' => $asset->alt_text,
                 'url' => $asset->display_url,
                 'thumbnail_url' => $asset->thumbnail_url,
+                'is_pixel_art' => $asset->isPixelArt(),
             ]);
 
         return response()->json($images);

@@ -156,6 +156,29 @@ export function MediaSettingsForm({
                         </span>
                     </div>
                 </div>
+                <div className="grid max-w-xs gap-2">
+                    <Label htmlFor="pixel-art-size">
+                        Pixel art max size (KB)
+                    </Label>
+                    <Input
+                        id="pixel-art-size"
+                        type="number"
+                        min={0}
+                        max={1024}
+                        value={data.pixel_art_max_size}
+                        onChange={(event) =>
+                            setData(
+                                'pixel_art_max_size',
+                                Number(event.target.value),
+                            )
+                        }
+                    />
+                    <span className="text-xs text-muted-foreground">
+                        Images this size or smaller are treated as pixel art:
+                        shown from the original file, and enlarged with hard
+                        pixel edges instead of blurring. 0 turns this off.
+                    </span>
+                </div>
             </Group>
 
             <Group title="Sizes">

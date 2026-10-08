@@ -38,16 +38,9 @@ test('authenticated users can visit the extra info page', function () {
     $response->assertInertia(fn ($page) => $page->component('dashboard/extra-info'));
 });
 
-test('guests are redirected from the map page', function () {
-    $response = $this->get(route('dashboard.map'));
-    $response->assertRedirect(route('login'));
-});
-
-test('authenticated users can visit the map page', function () {
-    $this->actingAs(User::factory()->create());
-
-    $response = $this->get(route('dashboard.map'));
-    $response->assertInertia(fn ($page) => $page->component('dashboard/map'));
+test('guests can visit the map page', function () {
+    $response = $this->get(route('map'));
+    $response->assertInertia(fn ($page) => $page->component('map'));
 });
 
 test('allowed users can visit the notes page and see its sidebar link', function () {

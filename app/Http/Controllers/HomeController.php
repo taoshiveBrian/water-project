@@ -7,7 +7,6 @@ use App\Models\Article;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
-use Laravel\Fortify\Features;
 
 class HomeController extends Controller
 {
@@ -19,15 +18,13 @@ class HomeController extends Controller
         $articles = Article::query()
             ->published()
             ->visibleTo($request->user())
-            ->with(['user', 'category', ...Article::imageRelations()])
+            ->with(['user.avatarImage', 'category', ...Article::imageRelations()])
             ->latest()
             ->limit(6)
             ->get();
 
         return Inertia::render('welcome', [
             'articles' => ArticleResource::collection($articles)->resolve($request),
-            'canResetPassword' => Features::enabled(Features::resetPasswords()),
-            'canRegister' => Features::enabled(Features::registration()),
         ]);
     }
 }

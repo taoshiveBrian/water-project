@@ -216,9 +216,16 @@ export function AppHeader({ breadcrumbs = [] }: Props) {
                                     variant="ghost"
                                     className="size-10 rounded-full p-1"
                                 >
-                                    <Avatar className="size-8 overflow-hidden rounded-full">
+                                    <Avatar
+                                        key={auth.user?.avatar ?? 'none'}
+                                        className="size-8 overflow-hidden rounded-full"
+                                    >
                                         <AvatarImage
                                             src={auth.user?.avatar ?? undefined}
+                                            className={cn(
+                                                auth.user?.avatar_pixelated &&
+                                                    '[image-rendering:pixelated]',
+                                            )}
                                             alt={auth.user?.name}
                                         />
                                         <AvatarFallback className="rounded-lg bg-neutral-200 text-black dark:bg-neutral-700 dark:text-white">

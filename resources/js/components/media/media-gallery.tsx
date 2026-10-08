@@ -29,7 +29,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import { cn } from '@/lib/utils';
+import { cn, pixelated } from '@/lib/utils';
 import { media } from '@/routes/dashboard';
 import { bulkDestroy, bulkFolder, bulkProcess, store } from '@/routes/media';
 import type { MediaAsset, MediaFilters, MediaStats, Paginated } from '@/types';
@@ -387,7 +387,10 @@ export function MediaGallery({
                                             src={asset.thumbnail_url}
                                             alt={asset.alt_text ?? ''}
                                             loading="lazy"
-                                            className="size-full object-cover"
+                                            className={cn(
+                                                'size-full object-cover',
+                                                pixelated(asset.is_pixel_art),
+                                            )}
                                         />
                                     ) : (
                                         <FileIcon
@@ -467,7 +470,12 @@ export function MediaGallery({
                                                 <img
                                                     src={asset.thumbnail_url}
                                                     alt=""
-                                                    className="size-8 rounded object-cover"
+                                                    className={cn(
+                                                        'size-8 rounded object-cover',
+                                                        pixelated(
+                                                            asset.is_pixel_art,
+                                                        ),
+                                                    )}
                                                 />
                                             ) : (
                                                 <FileIcon

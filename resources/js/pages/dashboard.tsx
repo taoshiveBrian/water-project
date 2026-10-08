@@ -1,6 +1,8 @@
 import { Head, Link } from '@inertiajs/react';
+import { AuthorByline } from '@/components/articles/author-byline';
 import { Badge } from '@/components/ui/badge';
 import { PlaceholderPattern } from '@/components/ui/placeholder-pattern';
+import { cn, pixelated } from '@/lib/utils';
 import { dashboard } from '@/routes';
 import { show } from '@/routes/articles';
 import type { ArticleSummary } from '@/types';
@@ -18,7 +20,10 @@ function LatestArticleCard({ article }: { article: ArticleSummary }) {
                 <img
                     src={article.cover_image_url}
                     alt=""
-                    className="absolute inset-0 size-full object-contain"
+                    className={cn(
+                        'absolute inset-0 size-full object-contain',
+                        pixelated(article.cover_image_pixelated),
+                    )}
                 />
             ) : (
                 <PlaceholderPattern className="absolute inset-0 size-full stroke-neutral-900/20 dark:stroke-neutral-100/20" />
@@ -26,11 +31,15 @@ function LatestArticleCard({ article }: { article: ArticleSummary }) {
             <div className="relative mt-auto grid gap-1 bg-background/90 p-3">
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
                     {article.category && (
-                        <Badge variant="secondary">{article.category.name}</Badge>
+                        <Badge variant="secondary">
+                            {article.category.name}
+                        </Badge>
                     )}
-                    <span>
-                        {new Date(article.created_at).toLocaleDateString()}
-                    </span>
+                    <AuthorByline
+                        author={article.author}
+                        date={article.created_at}
+                        className="min-w-0 truncate"
+                    />
                 </div>
                 <h3 className="line-clamp-2 font-medium group-hover:underline">
                     {article.title}

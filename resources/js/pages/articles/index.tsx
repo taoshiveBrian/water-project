@@ -1,5 +1,6 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { Lock, Plus } from 'lucide-react';
+import { AuthorByline } from '@/components/articles/author-byline';
 import Heading from '@/components/heading';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -10,7 +11,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import { cn } from '@/lib/utils';
+import { cn, pixelated } from '@/lib/utils';
 import { create, index, show } from '@/routes/articles';
 import type { ArticleSummary, Category, Paginated } from '@/types';
 
@@ -148,7 +149,12 @@ export default function ArticlesIndex({
                                         <img
                                             src={article.cover_image_url}
                                             alt=""
-                                            className="size-full object-contain"
+                                            className={cn(
+                                                'size-full object-contain',
+                                                pixelated(
+                                                    article.cover_image_pixelated,
+                                                ),
+                                            )}
                                         />
                                     )}
                                 </div>
@@ -169,12 +175,11 @@ export default function ArticlesIndex({
                                     <h3 className="font-medium group-hover:underline">
                                         {article.title}
                                     </h3>
-                                    <p className="text-xs text-muted-foreground">
-                                        {article.author} ·{' '}
-                                        {new Date(
-                                            article.created_at,
-                                        ).toLocaleDateString()}
-                                    </p>
+                                    <AuthorByline
+                                        author={article.author}
+                                        date={article.created_at}
+                                        className="text-xs text-muted-foreground"
+                                    />
                                 </div>
                             </Link>
                         ))}

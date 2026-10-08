@@ -4,6 +4,7 @@ import { formatBytes } from '@/components/media/format';
 import { StatusBadge } from '@/components/media/status-badge';
 import { Button } from '@/components/ui/button';
 import { process as processAsset, processAll } from '@/routes/media';
+import { cn, pixelated } from '@/lib/utils';
 import type { MediaAsset, ProcessingStatus, QueueStats } from '@/types';
 
 const order: ProcessingStatus[] = [
@@ -84,7 +85,10 @@ export function MediaQueue({
                                 <img
                                     src={asset.thumbnail_url}
                                     alt=""
-                                    className="size-10 rounded object-cover"
+                                    className={cn(
+                                        'size-10 rounded object-cover',
+                                        pixelated(asset.is_pixel_art),
+                                    )}
                                 />
                                 <div className="grid min-w-0 flex-1 gap-0.5">
                                     <span className="truncate font-medium">

@@ -38,6 +38,7 @@ class UpdateMediaSettingsRequest extends FormRequest
             'compression_quality' => ['required', 'integer', 'between:1,100'],
             'processing_method' => ['required', Rule::enum(ProcessingMethod::class)],
             'max_file_size' => ['required', 'integer', 'between:1,102400'],
+            'pixel_art_max_size' => ['required', 'integer', 'between:0,1024'],
             'allowed_mime_types' => ['required', 'array', 'min:1'],
             'allowed_mime_types.*' => ['required', 'string', Rule::in(self::SUPPORTED_MIME_TYPES), 'distinct'],
             'sizes' => ['present', 'array', 'max:10'],

@@ -10,6 +10,7 @@ function chapterImages(chapter: GuideChapter): TagImages {
             images.set(entry.tag, {
                 url: entry.url,
                 displayMode: entry.displayMode,
+                pixelated: entry.pixelated,
             });
         }
     }

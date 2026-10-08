@@ -1,37 +1,14 @@
-import { Form, Head, Link, usePage } from '@inertiajs/react';
+import { Head, Link } from '@inertiajs/react';
 import { Lock } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
-import AppLogoIcon from '@/components/app-logo-icon';
+import { AuthorByline } from '@/components/articles/author-byline';
 import { ArticleBody } from '@/components/articles/renderers/article-body';
 import { GuideContentsSidebar } from '@/components/articles/renderers/guide-renderer';
-import InputError from '@/components/input-error';
-import PasswordInput from '@/components/password-input';
 import TextLink from '@/components/text-link';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
-} from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Spinner } from '@/components/ui/spinner';
-import { dashboard, register } from '@/routes';
+import { cn, pixelated } from '@/lib/utils';
 import { index, show } from '@/routes/articles';
-import { store } from '@/routes/login';
-import { request } from '@/routes/password';
 import type { Article } from '@/types';
-
-type Props = {
-    articles: Article[];
-    canResetPassword: boolean;
-    canRegister: boolean;
-};
 
 function FeedArticle({ article }: { article: Article }) {
     const coverUrl = article.images.cover_image?.url;
@@ -51,17 +28,20 @@ function FeedArticle({ article }: { article: Article }) {
                         Members only
                     </Badge>
                 )}
-                <span>
-                    {article.author.name} ·{' '}
-                    {new Date(article.created_at).toLocaleDateString()}
-                </span>
+                <AuthorByline
+                    author={article.author}
+                    date={article.created_at}
+                />
             </div>
 
             {coverUrl && (
                 <img
                     src={coverUrl}
                     alt=""
-                    className="mx-auto h-auto max-h-[70vh] w-auto max-w-full rounded-xl"
+                    className={cn(
+                        'mx-auto h-auto max-h-[70vh] w-auto max-w-full rounded-xl',
+                        pixelated(article.images.cover_image?.pixelated),
+                    )}
                 />
             )}
 
@@ -83,99 +63,7 @@ function FeedArticle({ article }: { article: Article }) {
     );
 }
 
-function LoginDialog({
-    canResetPassword,
-    canRegister,
-}: Omit<Props, 'articles'>) {
-    return (
-        <Dialog>
-            <DialogTrigger asChild>
-                <Button>Log in</Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-sm">
-                <DialogHeader>
-                    <DialogTitle>Log in</DialogTitle>
-                    <DialogDescription>
-                        Enter your email and password to log in.
-                    </DialogDescription>
-                </DialogHeader>
-                <Form
-                    {...store.form()}
-                    options={{ preserveState: true, preserveScroll: true }}
-                    resetOnSuccess={['password']}
-                    className="flex flex-col gap-6"
-                >
-                    {({ processing, errors }) => (
-                        <>
-                            <div className="grid gap-2">
-                                <Label htmlFor="email">Email address</Label>
-                                <Input
-                                    id="email"
-                                    type="email"
-                                    name="email"
-                                    required
-                                    autoComplete="email"
-                                    placeholder="email@example.com"
-                                />
-                                <InputError message={errors.email} />
-                            </div>
-
-                            <div className="grid gap-2">
-                                <div className="flex items-center">
-                                    <Label htmlFor="password">Password</Label>
-                                    {canResetPassword && (
-                                        <TextLink
-                                            href={request()}
-                                            className="ml-auto text-sm"
-                                        >
-                                            Forgot password?
-                                        </TextLink>
-                                    )}
-                                </div>
-                                <PasswordInput
-                                    id="password"
-                                    name="password"
-                                    required
-                                    autoComplete="current-password"
-                                    placeholder="Password"
-                                />
-                                <InputError message={errors.password} />
-                            </div>
-
-                            <div className="flex items-center space-x-3">
-                                <Checkbox id="remember" name="remember" />
-                                <Label htmlFor="remember">Remember me</Label>
-                            </div>
-
-                            <Button
-                                type="submit"
-                                className="w-full"
-                                disabled={processing}
-                            >
-                                {processing && <Spinner />}
-                                Log in
-                            </Button>
-
-                            {canRegister && (
-                                <p className="text-center text-sm text-muted-foreground">
-                                    Don't have an account?{' '}
-                                    <TextLink href={register()}>Sign up</TextLink>
-                                </p>
-                            )}
-                        </>
-                    )}
-                </Form>
-            </DialogContent>
-        </Dialog>
-    );
-}
-
-export default function Welcome({
-    articles,
-    canResetPassword,
-    canRegister,
-}: Props) {
-    const { auth } = usePage().props;
+export default function Welcome({ articles }: { articles: Article[] }) {
     const feedRef = useRef<HTMLDivElement>(null);
     const [activeId, setActiveId] = useState<number | null>(null);
 
@@ -216,66 +104,43 @@ export default function Welcome({
     return (
         <>
             <Head title="Welcome" />
-            <div className="min-h-screen bg-background text-foreground">
-                <header className="border-b">
-                    <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-4 lg:px-8">
-                        <div className="flex items-center gap-3">
-                            <AppLogoIcon className="size-9 object-contain" />
-                            <span className="text-xl font-semibold tracking-tight">
-                                Water Comb
-                            </span>
+            <div className="mx-auto grid w-full max-w-7xl gap-8 px-4 py-8 lg:grid-cols-[1fr_minmax(0,48rem)_1fr]">
+                <aside className="hidden lg:block">
+                    {guide && (
+                        <div
+                            key={guide.id}
+                            className="h-full animate-in duration-300 fade-in"
+                        >
+                            <GuideContentsSidebar body={guide.body} />
                         </div>
-                        {auth.user ? (
-                            <Button asChild>
-                                <Link href={dashboard()}>Dashboard</Link>
-                            </Button>
-                        ) : (
-                            <LoginDialog
-                                canResetPassword={canResetPassword}
-                                canRegister={canRegister}
-                            />
-                        )}
+                    )}
+                </aside>
+
+                <div className="flex flex-col gap-6">
+                    <div className="flex items-baseline justify-between gap-4">
+                        <h1 className="text-sm font-medium tracking-wide text-muted-foreground uppercase">
+                            Latest articles
+                        </h1>
+                        <TextLink href={index()} className="text-sm">
+                            View all
+                        </TextLink>
                     </div>
-                </header>
 
-                <main className="mx-auto grid max-w-7xl gap-8 px-4 py-8 lg:grid-cols-[1fr_minmax(0,48rem)_1fr]">
-                    <aside className="hidden lg:block">
-                        {guide && (
-                            <div
-                                key={guide.id}
-                                className="h-full animate-in duration-300 fade-in"
-                            >
-                                <GuideContentsSidebar body={guide.body} />
-                            </div>
-                        )}
-                    </aside>
-
-                    <div className="flex flex-col gap-6">
-                        <div className="flex items-baseline justify-between gap-4">
-                            <h1 className="text-sm font-medium tracking-wide text-muted-foreground uppercase">
-                                Latest articles
-                            </h1>
-                            <TextLink href={index()} className="text-sm">
-                                View all
-                            </TextLink>
+                    {articles.length === 0 ? (
+                        <p className="py-12 text-center text-sm text-muted-foreground">
+                            No articles yet.
+                        </p>
+                    ) : (
+                        <div ref={feedRef} className="flex flex-col divide-y">
+                            {articles.map((article) => (
+                                <FeedArticle
+                                    key={article.id}
+                                    article={article}
+                                />
+                            ))}
                         </div>
-
-                        {articles.length === 0 ? (
-                            <p className="py-12 text-center text-sm text-muted-foreground">
-                                No articles yet.
-                            </p>
-                        ) : (
-                            <div ref={feedRef} className="flex flex-col divide-y">
-                                {articles.map((article) => (
-                                    <FeedArticle
-                                        key={article.id}
-                                        article={article}
-                                    />
-                                ))}
-                            </div>
-                        )}
-                    </div>
-                </main>
+                    )}
+                </div>
             </div>
         </>
     );

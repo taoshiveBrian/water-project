@@ -18,7 +18,7 @@ class DashboardController extends Controller
         $latestArticles = Article::query()
             ->published()
             ->visibleTo($request->user())
-            ->with(['user', 'category', 'coverImage'])
+            ->with(['user.avatarImage', 'category', 'coverImage'])
             ->latest()
             ->limit(3)
             ->get();

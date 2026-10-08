@@ -1,6 +1,8 @@
 import { Form, Head, router, usePage } from '@inertiajs/react';
 import AvatarController from '@/actions/App/Http/Controllers/Settings/AvatarController';
 import ProfileController from '@/actions/App/Http/Controllers/Settings/ProfileController';
+import { AvatarDialog } from '@/components/avatar-dialog';
+import type { AvatarChoice } from '@/components/avatar-dialog';
 import DeleteUser from '@/components/delete-user';
 import Heading from '@/components/heading';
 import InputError from '@/components/input-error';
@@ -9,7 +11,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useInitials } from '@/hooks/use-initials';
-import { cn } from '@/lib/utils';
 import { edit } from '@/routes/profile';
 import type { Auth } from '@/types';
 
@@ -22,7 +23,7 @@ const LINK_FIELDS = ['link_1', 'link_2', 'link_3'] as const;
 export default function Profile({
     avatarChoices,
 }: {
-    avatarChoices: { id: number; url: string }[];
+    avatarChoices?: AvatarChoice[];
 }) {
     const { auth } = usePage<PageProps>().props;
     const getInitials = useInitials();
@@ -41,99 +42,44 @@ export default function Profile({
                 />
 
                 <div className="flex flex-wrap items-center gap-4">
-                    <Avatar className="size-16 overflow-hidden rounded-full">
+                    {/* Keyed on the URL so a new avatar remounts the image instead of keeping the old one. */}
+                    <Avatar
+                        key={auth.user.avatar ?? 'none'}
+                        className="size-16 overflow-hidden rounded-full"
+                    >
                         <AvatarImage
                             src={auth.user.avatar ?? undefined}
                             alt={auth.user.name}
+                            className={
+                                auth.user.avatar_pixelated
+                                    ? '[image-rendering:pixelated]'
+                                    : undefined
+                            }
                         />
                         <AvatarFallback className="bg-neutral-200 text-black dark:bg-neutral-700 dark:text-white">
                             {getInitials(auth.user.name)}
                         </AvatarFallback>
                     </Avatar>
 
-                    <Form
-                        {...AvatarController.update.form()}
-                        options={{ preserveScroll: true }}
-                        resetOnSuccess
-                        className="grid gap-2"
-                    >
-                        {({ processing, errors }) => (
-                            <>
-                                <div className="flex flex-wrap items-center gap-2">
-                                    <Input
-                                        type="file"
-                                        name="avatar"
-                                        accept="image/jpeg,image/png"
-                                        aria-label="Avatar image"
-                                        required
-                                        className="w-auto"
-                                    />
-                                    <Button
-                                        variant="outline"
-                                        disabled={processing}
-                                    >
-                                        Upload
-                                    </Button>
-                                    {auth.user.avatar && (
-                                        <Button
-                                            type="button"
-                                            variant="ghost"
-                                            onClick={() =>
-                                                router.delete(
-                                                    AvatarController.destroy.url(),
-                                                    { preserveScroll: true },
-                                                )
-                                            }
-                                        >
-                                            Remove
-                                        </Button>
-                                    )}
-                                </div>
-                                <p className="text-xs text-muted-foreground">
-                                    JPG or PNG, up to 2 MB. Your uploaded avatar
-                                    is private to you.
-                                </p>
-                                <InputError message={errors.avatar} />
-                            </>
-                        )}
-                    </Form>
-                </div>
+                    <AvatarDialog
+                        currentId={auth.user.avatar_id ?? null}
+                        choices={avatarChoices}
+                    />
 
-                {avatarChoices.length > 0 && (
-                    <div className="grid gap-2">
-                        <Label>Or choose an avatar</Label>
-                        <div className="flex flex-wrap gap-2">
-                            {avatarChoices.map((choice) => (
-                                <button
-                                    key={choice.id}
-                                    type="button"
-                                    aria-label="Use this avatar"
-                                    aria-pressed={
-                                        auth.user.avatar_id === choice.id
-                                    }
-                                    onClick={() =>
-                                        router.put(
-                                            AvatarController.choose.url(),
-                                            { asset_id: choice.id },
-                                            { preserveScroll: true },
-                                        )
-                                    }
-                                    className={cn(
-                                        'size-12 overflow-hidden rounded-full ring-offset-2 ring-offset-background outline-none hover:ring-2 hover:ring-ring/50 focus-visible:ring-2 focus-visible:ring-ring',
-                                        auth.user.avatar_id === choice.id &&
-                                            'ring-2 ring-foreground hover:ring-foreground',
-                                    )}
-                                >
-                                    <img
-                                        src={choice.url}
-                                        alt=""
-                                        className="size-full object-cover"
-                                    />
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-                )}
+                    {auth.user.avatar && (
+                        <Button
+                            type="button"
+                            variant="ghost"
+                            onClick={() =>
+                                router.delete(AvatarController.destroy.url(), {
+                                    preserveScroll: true,
+                                })
+                            }
+                        >
+                            Remove
+                        </Button>
+                    )}
+                </div>
 
                 <Form
                     {...ProfileController.update.form()}

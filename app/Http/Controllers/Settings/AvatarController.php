@@ -7,6 +7,7 @@ use App\Http\Requests\Settings\AvatarUpdateRequest;
 use App\Models\Asset;
 use App\Models\User;
 use App\Services\AssetService;
+use Illuminate\Database\Query\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -35,10 +36,12 @@ class AvatarController extends Controller
     public function choose(Request $request): RedirectResponse
     {
         $validated = $request->validate([
+            // A closure, because a plain `where('is_private', false)` reaches SQLite as '' and never matches.
             'asset_id' => ['required', 'integer', Rule::exists('assets', 'id')
-                ->where('category', 'image')
-                ->where('subcategory', Asset::AVATAR_FOLDER)
-                ->where('is_private', false)],
+                ->where(fn (Builder $query) => $query
+                    ->where('category', 'image')
+                    ->where('subcategory', Asset::AVATAR_FOLDER)
+                    ->where('is_private', false))],
         ]);
 
         return $this->replaceAvatar($request->user(), Asset::findOrFail($validated['asset_id']), __('Avatar updated.'));
