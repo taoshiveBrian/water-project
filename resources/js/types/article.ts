@@ -110,6 +110,14 @@ export type ArticleAuthor = {
     name: string;
     avatar: string | null;
     avatar_pixelated: boolean;
+    /** Only on full articles, and null when the author hides it from this viewer. */
+    profile?: AuthorProfile | null;
+};
+
+export type AuthorProfile = {
+    profile_text: string | null;
+    links: string[];
+    email: string | null;
 };
 
 export type ArticleSummary = {

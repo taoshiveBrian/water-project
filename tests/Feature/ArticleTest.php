@@ -109,6 +109,27 @@ describe('index', function () {
 });
 
 describe('show', function () {
+    test("the author's profile card is shown only to the viewers they allow, with email only if chosen", function () {
+        $author = User::factory()->create(['profile_text' => 'Hydrologist.', 'link_1' => 'https://github.com/example']);
+        $article = Article::factory()->for($author)->create();
+
+        $this->get(route('articles.show', $article))
+            ->assertInertia(fn (Assert $page) => $page->where('article.author.profile', null));
+
+        $author->update(['profile_visibility' => 'public', 'show_email' => true]);
+
+        $this->get(route('articles.show', $article))
+            ->assertInertia(fn (Assert $page) => $page->where('article.author.profile.email', $author->email));
+
+        $author->update(['profile_visibility' => 'members', 'show_email' => false]);
+
+        $this->actingAs(User::factory()->create())->get(route('articles.show', $article))
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('article.author.profile.profile_text', 'Hydrologist.')
+                ->where('article.author.profile.links', ['https://github.com/example'])
+                ->where('article.author.profile.email', null));
+    });
+
     test('guests can view a public article with its image urls', function () {
         $article = Article::factory()->withCoverImage()->create();
 

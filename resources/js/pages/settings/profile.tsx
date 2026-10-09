@@ -8,6 +8,7 @@ import Heading from '@/components/heading';
 import InputError from '@/components/input-error';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useInitials } from '@/hooks/use-initials';
@@ -19,6 +20,11 @@ type PageProps = {
 };
 
 const LINK_FIELDS = ['link_1', 'link_2', 'link_3'] as const;
+
+const VISIBILITY_OPTIONS = [
+    { value: 'members', label: 'Logged-in members only' },
+    { value: 'public', label: 'Everyone, including visitors' },
+] as const;
 
 export default function Profile({
     avatarChoices,
@@ -169,6 +175,59 @@ export default function Profile({
                                     </div>
                                 ))}
                             </div>
+
+                            <fieldset className="grid gap-3">
+                                <legend className="mb-2 text-sm font-medium">
+                                    Profile card
+                                </legend>
+                                <p className="-mt-1 text-xs text-muted-foreground">
+                                    Opens when someone clicks your name on one
+                                    of your articles.
+                                </p>
+
+                                <div className="flex items-center gap-3">
+                                    <Checkbox
+                                        id="show_email"
+                                        name="show_email"
+                                        value="1"
+                                        defaultChecked={
+                                            auth.user.show_email ?? false
+                                        }
+                                    />
+                                    <Label htmlFor="show_email">
+                                        Show my email address
+                                    </Label>
+                                </div>
+
+                                <div className="grid gap-2">
+                                    <span className="text-sm">
+                                        Who can see it
+                                    </span>
+                                    {VISIBILITY_OPTIONS.map((option) => (
+                                        <label
+                                            key={option.value}
+                                            className="flex items-center gap-3 text-sm"
+                                        >
+                                            <input
+                                                type="radio"
+                                                name="profile_visibility"
+                                                value={option.value}
+                                                defaultChecked={
+                                                    (auth.user
+                                                        .profile_visibility ??
+                                                        'members') ===
+                                                    option.value
+                                                }
+                                                className="size-4 accent-primary"
+                                            />
+                                            {option.label}
+                                        </label>
+                                    ))}
+                                    <InputError
+                                        message={errors.profile_visibility}
+                                    />
+                                </div>
+                            </fieldset>
 
                             <div className="flex items-center gap-4">
                                 <Button

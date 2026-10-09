@@ -9,6 +9,8 @@ export type User = {
     link_1?: string | null;
     link_2?: string | null;
     link_3?: string | null;
+    show_email?: boolean;
+    profile_visibility?: 'members' | 'public';
     email_verified_at: string | null;
     created_at: string;
     updated_at: string;

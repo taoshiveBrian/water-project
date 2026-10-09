@@ -31,7 +31,7 @@ class ArticleResource extends JsonResource
             'is_note' => $this->is_note,
             'source_label' => $this->source_label,
             'source_url' => $this->source_url,
-            'author' => AuthorResource::make($this->user)->resolve($request),
+            'author' => AuthorResource::withProfile($this->user)->resolve($request),
             'images' => $this->images(),
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,

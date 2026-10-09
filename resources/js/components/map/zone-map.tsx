@@ -46,7 +46,7 @@ export default function ZoneMap() {
                 fitBoundsOptions: { padding: 40 },
             }}
             mapStyle={MAP_STYLE_URL}
-            style={{ width: '100%', height: '100%' }}
+            style={{ position: 'absolute', inset: 0 }}
             cooperativeGestures
         >
             <NavigationControl position="top-right" />

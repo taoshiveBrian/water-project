@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\ProfileVisibility;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Appends;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -23,6 +24,8 @@ use Illuminate\Support\Carbon;
  * @property string|null $link_1
  * @property string|null $link_2
  * @property string|null $link_3
+ * @property bool $show_email Show the email on their profile card.
+ * @property ProfileVisibility $profile_visibility Who can open their profile card.
  * @property int|null $avatar_id A media library asset in the "avatars" folder.
  * @property-read string|null $avatar The avatar's URL at avatar size.
  * @property-read bool $avatar_pixelated
@@ -33,7 +36,7 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
-#[Fillable(['name', 'email', 'password', 'profile_text', 'link_1', 'link_2', 'link_3'])]
+#[Fillable(['name', 'email', 'password', 'profile_text', 'link_1', 'link_2', 'link_3', 'show_email', 'profile_visibility'])]
 #[Hidden(['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token', 'avatarImage'])]
 #[Appends(['avatar', 'avatar_pixelated'])]
 class User extends Authenticatable
@@ -77,6 +80,8 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'show_email' => 'boolean',
+            'profile_visibility' => ProfileVisibility::class,
         ];
     }
 }
