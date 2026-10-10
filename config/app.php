@@ -30,6 +30,22 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Admin Emails
+    |--------------------------------------------------------------------------
+    |
+    | Users with these email addresses can see draft notes and user avatar
+    | uploads. Set ADMIN_EMAILS in your ".env" file as a comma-separated
+    | list, e.g. ADMIN_EMAILS="first@example.com,second@example.com".
+    |
+    */
+
+    'admin_emails' => array_values(array_filter(array_map(
+        fn (string $email): string => strtolower(trim($email)),
+        explode(',', (string) env('ADMIN_EMAILS', '')),
+    ))),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Debug Mode
     |--------------------------------------------------------------------------
     |

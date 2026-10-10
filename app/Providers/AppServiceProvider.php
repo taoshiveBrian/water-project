@@ -36,7 +36,7 @@ class AppServiceProvider extends ServiceProvider
     {
         $isAdmin = fn (User $user): bool => in_array(
             strtolower($user->email),
-            ['admin@example.com', 'admin@example.com', 'test@example.com'],
+            config('app.admin_emails'),
             true,
         );
 

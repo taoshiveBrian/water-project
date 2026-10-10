@@ -44,7 +44,8 @@ test('guests can visit the map page', function () {
 });
 
 test('allowed users can visit the notes page and see its sidebar link', function () {
-    $this->actingAs(User::factory()->create(['email' => 'admin@example.com']));
+    config(['app.admin_emails' => ['admin@example.com']]);
+    $this->actingAs(User::factory()->create(['email' => 'Admin@example.com']));
 
     $response = $this->get(route('dashboard.notes'));
     $response->assertInertia(fn ($page) => $page
