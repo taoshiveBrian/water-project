@@ -6,7 +6,7 @@ export default function AppLogoIcon({
 }: ImgHTMLAttributes<HTMLImageElement>) {
     return (
         <img
-            src="/storage/assets/brand/watercomb-192.png"
+            src="/images/brand/watercomb-192.png"
             alt={alt}
             {...props}
         />
