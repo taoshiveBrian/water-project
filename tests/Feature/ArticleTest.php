@@ -576,6 +576,7 @@ describe('notes', function () {
     });
 
     test('the notes page lists only the current user\'s drafts', function () {
+        config(['app.admin_emails' => ['test@example.com']]);
         $user = User::factory()->create(['email' => 'test@example.com']);
         $note = Article::factory()->note()->for($user)->create();
         Article::factory()->note()->create();

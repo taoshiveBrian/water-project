@@ -64,6 +64,7 @@ describe('access', function () {
         $this->actingAs($owner)->delete(route('media.destroy', $private))->assertNotFound();
         $this->actingAs($owner)->getJson(route('media.picker'))->assertJsonCount(0, 'data');
 
+        config(['app.admin_emails' => ['test@example.com']]);
         $this->actingAs(User::factory()->create(['email' => 'test@example.com']))->get(route('dashboard.media'))
             ->assertInertia(fn (Assert $page) => $page->has('assets.data', 1)->where('folders.0', 'user_avatars'));
     });
